@@ -1,0 +1,35 @@
+# Builds the read-only static website (make static) and publishes it as a downloadable artifact
+# named "static-site". Run it from the GitHub UI: Actions → Build static website → Run workflow.
+name: Build static website
+on:
+  workflow_dispatch:
+    inputs:
+      demo_today:
+        description: "Demo date (YYYY-MM-DD) that synthetic dates are relative to; empty = build date"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: make setup
+      - run: make static
+        env:
+          DEMO_TODAY: ${{ github.event.inputs.demo_today }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: static-site
+          path: frontend/dist/
+          retention-days: 30
