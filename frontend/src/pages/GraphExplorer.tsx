@@ -53,6 +53,7 @@ export default function GraphExplorer() {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<any[]>([]);
   const [showLabels, setShowLabels] = useState(true);
+  const [filterInFocus, setFilterInFocus] = useState(false);
   const params = focus ? { focus, depth } : { types: types.join(","), limit: 600 };
   const { data, loading, error } = useApi<{ nodes: GNode[]; links: GLink[] }>("/kg/graph", params, [focus, depth, types.join(",")]);
 
@@ -87,7 +88,7 @@ export default function GraphExplorer() {
   const graph = useMemo(() => {
     if (!data) return { nodes: [] as GNode[], links: [] as GLink[] };
     let nodes = data.nodes.map((n) => ({ ...n }));
-    if (focus) nodes = nodes.filter((n) => n.id === focus || types.includes(n.type) || types.length === 0 || showAllTypesInFocus);
+    if (focus && filterInFocus) nodes = nodes.filter((n) => n.id === focus || types.includes(n.type));
     const ids = new Set(nodes.map((n) => n.id));
     const links = data.links
       .map((l) => ({ ...l, source: typeof l.source === "object" ? l.source.id : l.source, target: typeof l.target === "object" ? l.target.id : l.target }))
@@ -99,7 +100,7 @@ export default function GraphExplorer() {
     });
     nodes.forEach((n) => (n.deg = deg[n.id] || 0));
     return { nodes, links };
-  }, [data, focus, types]);
+  }, [data, focus, types, filterInFocus]);
 
   const fg = useRef<ForceGraphMethods<any, any>>();
   useEffect(() => {
@@ -178,7 +179,11 @@ export default function GraphExplorer() {
               <button className="text-[11px] text-accent-700 hover:underline" onClick={() => setTypes([])}>none</button>
             </span>
           </div>
-          {focus && <div className="mb-1 text-[11px] muted">In focus mode, unticked types are hidden from the neighbourhood.</div>}
+          {focus && (
+            <label className="mb-1 flex items-center gap-2 text-[11px] muted">
+              <input type="checkbox" checked={filterInFocus} onChange={(e) => setFilterInFocus(e.target.checked)} /> apply type filter to the neighbourhood
+            </label>
+          )}
           <ul className="space-y-0.5">
             {nodeTypes.map(([t, n]) => (
               <li key={t}>
@@ -283,8 +288,6 @@ export default function GraphExplorer() {
     </div>
   );
 }
-
-const showAllTypesInFocus = false;
 
 function NodeDrawer({ id, onClose, onFocus, onSelect, onExplain, onOpen }: {
   id: string; onClose: () => void; onFocus: (id: string) => void; onSelect: (id: string) => void; onExplain: (id: string) => void; onOpen: (id: string) => void;
