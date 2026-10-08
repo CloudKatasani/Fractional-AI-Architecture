@@ -62,3 +62,4 @@ Decisions taken while building the prototype (spec §0.6 and §16). Most recent 
   explain a node). There is no static Q→A list: answers are computed from the graph, so they stay true after approvals change it.
 - **Frontend types**: `src/api/schema.d.ts` is generated from the running API's OpenAPI document (`npm run gen:api`); a small
   hand-written subset of shared shapes lives in `src/api/client.ts`.
+- **docker-compose**: not provided (optional in the spec); `make setup && make demo` is the supported path.
