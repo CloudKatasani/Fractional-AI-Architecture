@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "build:static": "tsc --noEmit -p tsconfig.json && VITE_STATIC_DEMO=1 vite build",
     "preview": "vite preview --port 5173",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit -p tsconfig.json",

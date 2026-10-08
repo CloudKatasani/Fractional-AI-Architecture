@@ -1,6 +1,8 @@
 // Thin typed fetch client for the FastAPI backend (/api/v1). Every call is tenant-scoped via X-Tenant-Id.
 // Response types for the OpenAPI surface can be regenerated with `npm run gen:api` (src/api/schema.d.ts).
 
+import { STATIC_DEMO, staticRequest, staticUrl } from "./static";
+
 let currentTenant = "northgrid";
 
 export function setTenant(t: string) {
@@ -26,6 +28,13 @@ function qs(params?: Record<string, unknown>): string {
 }
 
 async function request<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
+  if (STATIC_DEMO) {
+    try {
+      return await staticRequest(currentTenant, method, path, body, params);
+    } catch (e: any) {
+      throw new ApiError(e.status || 500, e.message || String(e));
+    }
+  }
   const res = await fetch(`/api/v1${path}${qs(params)}`, {
     method,
     headers: { "Content-Type": "application/json", "X-Tenant-Id": currentTenant },
@@ -47,7 +56,8 @@ export const api = {
   get: <T = any>(path: string, params?: Record<string, unknown>) => request<T>("GET", path, undefined, params),
   post: <T = any>(path: string, body?: unknown, params?: Record<string, unknown>) => request<T>("POST", path, body ?? {}, params),
   patch: <T = any>(path: string, body?: unknown) => request<T>("PATCH", path, body ?? {}),
-  url: (path: string, params?: Record<string, unknown>) => `/api/v1${path}${qs({ ...params, tenant_id: currentTenant })}`,
+  url: (path: string, params?: Record<string, unknown>) =>
+    STATIC_DEMO ? staticUrl(currentTenant, path, params) : `/api/v1${path}${qs({ ...params, tenant_id: currentTenant })}`,
 };
 
 // ---- shared response shapes (subset; see backend/app/agents/base.py) -----------------------------

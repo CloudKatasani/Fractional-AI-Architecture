@@ -1,3 +1,4 @@
+import { STATIC_DEMO } from "../api/static";
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { ROLE_LABELS, TENANTS, useApp } from "../state/AppState";
@@ -75,7 +76,14 @@ export function Layout({ children }: { children: ReactNode }) {
           </NavLink>
           {config && <div className="mt-4 px-4 text-[11px] muted">Demo customer data · {config.demo_today}</div>}
         </nav>
-        <main className="min-w-0 flex-1 p-5">{children}</main>
+        <main className="min-w-0 flex-1 p-5">
+          {STATIC_DEMO && (
+            <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Interactive preview with synthetic data. Agent runs replay recorded results; approvals are read-only.
+            </div>
+          )}
+          {children}
+        </main>
       </div>
       <EvidenceDrawer />
       {toast && (

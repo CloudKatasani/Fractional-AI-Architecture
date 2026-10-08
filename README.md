@@ -37,6 +37,7 @@ no API key needed). For **live mode** set `LLM_MODE=live` and `ANTHROPIC_API_KEY
 | `make demo` / `make stop` | data + API in the background + UI in the foreground / stop the API |
 | `make build` | build the static UI into `frontend/dist` (served by the API at http://localhost:8000) |
 | `make test` / `make lint` | pytest with coverage / ruff + TypeScript + eslint |
+| `make static` / `make deploy-s3 BUCKET=…` | read-only static website (UI + JSON snapshot, no backend) / upload it to S3, see [`docs/DEPLOY_AWS_S3.md`](docs/DEPLOY_AWS_S3.md) |
 | `make docs` | regenerate `docs/AGENT_CATALOG.md`, `docs/DEMO_SCRIPT.md`, `data_gen/README.md` |
 
 Configuration (`.env`): `LLM_MODE`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `SEED`, `DEMO_TODAY`, `DATA_DIR`, and

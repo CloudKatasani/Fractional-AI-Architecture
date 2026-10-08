@@ -5,7 +5,7 @@ PYPATH = PYTHONPATH=backend:.
 API_PORT ?= 8000
 UI_PORT ?= 5173
 
-.PHONY: setup data api ui demo test reset docs lint build stop
+.PHONY: setup data api ui demo test reset docs lint build static deploy-s3 stop
 
 setup:
 	@if command -v uv >/dev/null 2>&1; then uv pip install --system -r requirements.txt || uv pip install -r requirements.txt; \
@@ -32,6 +32,16 @@ ui:
 
 build:
 	cd frontend && npm run build
+
+# Read-only static site (no backend): UI + JSON snapshot in frontend/dist. See docs/DEPLOY_AWS_S3.md.
+static:
+	cd frontend && npm run build:static
+	$(PYPATH) $(PY) scripts/export_static.py --out frontend/dist/demo-data
+
+# Upload frontend/dist to an S3 website bucket: make deploy-s3 BUCKET=my-bucket
+deploy-s3:
+	@test -n "$(BUCKET)" || (echo "usage: make deploy-s3 BUCKET=<bucket-name>" && exit 1)
+	scripts/deploy_s3.sh $(BUCKET)
 
 # Generates data if missing, starts the API (port 8000) and the UI (port 5173).
 demo: data
