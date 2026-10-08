@@ -1,5 +1,4 @@
 import { Fragment, ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { Evidence } from "../api/client";
 import { useApi, useApp } from "../state/AppState";
 import { Badge, ConfidenceBadge, Loading } from "./ui";
@@ -129,11 +128,6 @@ export function EvidenceDrawer() {
                   ))}
                 </ul>
               </div>
-              {data.kg_node && (
-                <Link className="btn btn-sm" to={`/graph?focus=${evidenceId}`} onClick={() => openEvidence(null)}>
-                  Show in graph explorer
-                </Link>
-              )}
             </>
           )}
         </div>

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import statistics
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from app.config import demo_today
 from app.db.session import Repo
@@ -51,6 +51,17 @@ def savings(repo: Repo) -> dict:
             "source_refs": {"identified": id_refs, "approved": [v[1] for v in approved_by_key.values()], "realized": real_refs}}
 
 
+def roi(sav: dict) -> dict:
+    """Savings relative to the subscription fee (plan and fee from settings / .env)."""
+    from app.config import settings
+
+    fee = settings.plan_fee_usd
+    return {"plan": settings.plan_name, "annual_fee_usd": fee,
+            "multiple": round(sav["identified"] / fee, 1) if fee else None,
+            "approved_multiple": round(sav["approved"] / fee, 1) if fee else None,
+            "payback_days": round(365 * fee / sav["approved"]) if sav["approved"] else None}
+
+
 def dashboard(tenant_id: str) -> dict:
     repo = Repo(tenant_id)
     kg = get_kg(tenant_id)
@@ -88,15 +99,6 @@ def dashboard(tenant_id: str) -> dict:
     violations = {"value": len(pol_open) + len(kg_viol), "policy": len(pol_open), "standards": len(kg_viol),
                   "source_refs": [f["subject_id"] for f in pol_open[:10]] + [v["subject_id"] for v in kg_viol[:10]]}
 
-    debt = latest_output(repo, "app.tech_debt_radar")
-    avg = round(sum(f["score"] for f in debt["findings"]) / max(1, len(debt["findings"])), 1) if debt else None
-    trend = []
-    if avg is not None:
-        factors = [1.12, 1.10, 1.08, 1.05, 1.03, 1.0]  # synthetic history (Section 10.2: "6 months synthetic")
-        for i, f in enumerate(factors):
-            m = (today.replace(day=1) - timedelta(days=30 * (5 - i))).strftime("%Y-%m")
-            trend.append({"month": m, "score": round(avg * f, 1)})
-
     upcoming = []
     for a in repo.all("applications"):
         if a["vendor_eos_date"]:
@@ -125,8 +127,7 @@ def dashboard(tenant_id: str) -> dict:
     return {
         "tenant_id": tenant_id, "as_of": today.isoformat(), "inventory_accuracy": inv, "savings": savings(repo),
         "ai_tiers": tiers, "ai_tier_refs": tier_refs, "design_review": turnaround, "violations": violations,
-        "debt_trend": {"current": avg, "points": trend, "source_refs": [debt["run_id"]] if debt else []},
-        "upcoming": {"count": len(upcoming), "items": upcoming[:12]}, "acceptance": acceptance,
+        "upcoming": {"count": len(upcoming), "items": upcoming[:12]}, "acceptance": acceptance, "roi": roi(savings(repo)),
         "decisions_needed": decisions, "pending_approvals": len(pending),
         "counts": {"applications": len(apps), "datasets": repo.count("datasets"), "ai_usecases": repo.count("ai_usecases"),
                    "integrations": repo.count("integrations"), "apis": repo.count("apis")},

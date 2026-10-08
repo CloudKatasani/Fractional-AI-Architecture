@@ -97,7 +97,6 @@ class MockCopilot:
             (r"what depends on (?:the )?(.+?)\??$", self.impact),
             (r"(?:ai use cases|ai).*(?:pii|personal data)", self.ai_pii),
             (r"(?:ai use cases|ai).*high risk", self.ai_high_risk),
-            (r"pattern for (.+?)\??$", self.pattern),
             (r"contracts? renew.*?(\d+) days", self.renewals),
             (r"(?:integrations|what).*(?:cross|crosses) the (?:it/ot|ot|bss/oss|boundary)|bss and oss share", self.boundary),
             (r"(?:how much do we spend on|cost of) (?:the )?(.+?)\??$", self.spend),
@@ -106,7 +105,6 @@ class MockCopilot:
             (r"apis? .*duplicat|duplicat.*apis?", self.dup_apis),
             (r"residency", self.residency),
             (r"design reviews? .*pending|pending design", self.pending_designs),
-            (r"what does the (.+?) (?:strategy )?need that we don'?t have", self.strategy_gaps),
             (r"end of support|eos", self.eos),
             (r"unregistered|shadow ai", self.shadow_ai),
             (r"shadow it", self.shadow_it),
@@ -189,7 +187,6 @@ class MockCopilot:
 
     def _filter_focus(self, low: str, focus: list[dict]) -> dict | None:
         """Questions about the set of records cited in the previous answer."""
-        from app.agents.base import AgentContext
         from app.agents.data_ai.ai_risk_classifier import classify
 
         by_type: dict[str, list[dict]] = {}
@@ -324,7 +321,6 @@ class MockCopilot:
         return {"answer": f"{len(ucs)} AI use cases use personal data:\n" + "\n".join(lines), "citations": _cite(self.kg, cites), "mermaid": None}
 
     def ai_high_risk(self) -> dict:
-        from app.agents.base import AgentContext
         from app.agents.data_ai.ai_risk_classifier import classify
 
         ctx = AgentContext(self.t)
@@ -337,20 +333,6 @@ class MockCopilot:
                  for u, c in rows]
         return {"answer": "High-risk (and prohibited) AI use cases under the tiering rules:\n" + "\n".join(lines),
                 "citations": _cite(self.kg, [u["id"] for u, _ in rows]), "mermaid": None}
-
-    def pattern(self, what: str) -> dict | None:
-        from app.agents.application.pattern_advisor import PatternAdvisor
-
-        ctx = AgentContext(self.t, params={"text": what})
-        res = PatternAdvisor().mock_run(ctx)
-        if not res.findings:
-            return {"answer": f"No reference pattern matches “{what}”. Ask the principal architect to add one.", "citations": [], "mermaid": None}
-        f = res.findings[0]
-        approved = "Yes" if f.fit_score >= 0.5 else "Partially"
-        return {"answer": f"{approved} — **{f.name}** [{f.pattern_id}] fits ({f.why}) Applicable standards: "
-                          + ", ".join(f"[{s}]" for s in f.standard_ids) + "."
-                          + (" Reuse: " + ", ".join(f"[{a}]" for a in f.reuse_api_ids) if f.reuse_api_ids else ""),
-                "citations": _cite(self.kg, [f.pattern_id] + f.standard_ids + f.reuse_api_ids), "mermaid": f.starter_diagram_mermaid}
 
     def renewals(self, days: str) -> dict:
         n = int(days)
@@ -439,31 +421,6 @@ class MockCopilot:
         lines = [f"- {d['title']} [{d['id']}] — {d['team']}, submitted {d['submitted_at'][:10]}" for d in ds]
         return {"answer": f"{len(ds)} design reviews are pending:\n" + "\n".join(lines), "citations": _cite(self.kg, [d["id"] for d in ds]),
                 "mermaid": None}
-
-    def strategy_gaps(self, what: str) -> dict | None:
-        docs = self.repo.all("strategy_docs")
-        best = process.extractOne(what, {d["id"]: d["title"] for d in docs}, scorer=fuzz.WRatio, score_cutoff=50)
-        if not best:
-            return None
-        doc = next(d for d in docs if d["id"] == best[2])
-        goals = [g for g in self.repo.all("goals") if g["source_doc_id"] == doc["id"]]
-        from app.agents.enterprise.strategy_capability_mapper import StrategyCapabilityMapper
-
-        res = StrategyCapabilityMapper().mock_run(AgentContext(self.t))
-        caps = self.repo.by_id("capabilities")
-        lines, cites = [], [doc["id"]]
-        for f in res.findings:
-            if f.goal_id not in {g["id"] for g in goals}:
-                continue
-            weak = [c for c in f.capability_ids if caps[c]["maturity"] <= 2]
-            cites += [f.goal_id] + weak
-            lines.append(f"- **{f.statement}** [{f.goal_id}] needs " + (", ".join(
-                f"{caps[c]['name']} [{c}] (maturity {caps[c]['maturity']}/5)" for c in weak) if weak else "capabilities that are already mature"))
-        funded = {g for p in self.repo.all("projects") for g in p["goal_ids"]}
-        unfunded = [g for g in goals if g["id"] not in funded]
-        tail = ("\nUnfunded: " + "; ".join(f"{g['statement']} [{g['id']}]" for g in unfunded)) if unfunded else ""
-        return {"answer": f"**{doc['title']}** [{doc['id']}] depends on capabilities we rate low-maturity:\n" + "\n".join(lines) + tail,
-                "citations": _cite(self.kg, cites + [g["id"] for g in unfunded]), "mermaid": None}
 
     def eos(self) -> dict:
         today = demo_today()

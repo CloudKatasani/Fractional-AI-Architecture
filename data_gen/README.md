@@ -47,11 +47,11 @@ to `data/{tenant}/raw/`. After writing the tables the generator builds the knowl
 | `gt_app_aliases` | 1094 | 1301 | hidden ground truth: raw name → application |
 | `gt_shadow_it` | 50 | 40 | hidden ground truth: shadow IT |
 | `gt_planted` | 228 | 268 | hidden ground truth: every planted anomaly |
-| `kg_nodes` | 2098 | 2499 | knowledge graph |
-| `kg_edges` | 3424 | 4042 | knowledge graph |
-| `agent_runs` | 26 | 26 | baseline runs |
-| `approvals` | 257 | 317 | baseline proposals + history |
-| `audit_events` | 332 | 392 |  |
+| `kg_nodes` | 2096 | 2497 | knowledge graph |
+| `kg_edges` | 3395 | 4013 | knowledge graph |
+| `agent_runs` | 11 | 11 | baseline runs |
+| `approvals` | 138 | 190 | baseline proposals + history |
+| `audit_events` | 179 | 231 |  |
 
 ## Planted anomalies (counts)
 

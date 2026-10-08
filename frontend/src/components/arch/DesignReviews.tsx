@@ -3,9 +3,8 @@ import { api } from "../../api/client";
 import { ROLE_LABELS, useApi, useApp } from "../../state/AppState";
 import { AgentPanel, ApprovalControls } from "../AgentPanel";
 import { EvidenceChip, EvidenceList, TextWithChips } from "../Evidence";
-import { Badge, Card, Empty, ErrorBox, Loading, SeverityBadge, since } from "../ui";
+import { Badge, Card, Empty, ErrorBox, Loading, SeverityBadge } from "../ui";
 import { getUrlParam, HighlightedMarkdown, IdChips, setUrlParam, useRunMeta, VerdictBadge } from "./common";
-import { ThreatTable } from "./ThreatModels";
 
 export function DesignReviews() {
   const { data, loading, error } = useApi<any>("/app/designs");
@@ -101,8 +100,6 @@ function DesignDetail({ id, onClose }: { id: string; onClose: () => void }) {
   if (error) return <ErrorBox error={error} />;
   if (!d) return null;
   const approvals: any[] = d.approvals || [];
-  const tm = d.threat_model;
-  const tmFinding = tm?.findings?.[0];
 
   return (
     <div className="space-y-4">
@@ -200,26 +197,6 @@ function DesignDetail({ id, onClose }: { id: string; onClose: () => void }) {
           )}
         </div>
       </div>
-      <AgentPanel
-        agentId="app.threat_model_assistant"
-        title="Threat model (STRIDE)"
-        run={tm || null}
-        params={{ design_id: id }}
-        runLabel={tm ? "Re-run threat model" : "Run threat model"}
-      >
-        {tmFinding ? (
-          <>
-            <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="muted">Publish:</span>
-              <ApprovalControls approval={approvals.find((a) => a.action_type === "publish_threat_model")} />
-              {tm.started_at && <span className="muted">model from {since(tm.started_at)}</span>}
-            </div>
-            <ThreatTable threats={tmFinding.threats} />
-          </>
-        ) : (
-          <div className="text-sm muted">No threat model for this design yet.</div>
-        )}
-      </AgentPanel>
     </div>
   );
 }

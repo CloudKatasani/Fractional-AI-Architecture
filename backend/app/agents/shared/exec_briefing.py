@@ -20,7 +20,7 @@ class ExecBriefing(Agent):
     name = "Executive Briefing Agent"
     domain = "shared"
     description = ("Writes the monthly executive summary: inventory accuracy, savings identified / approved / realised, AI "
-                   "use cases by tier, design review SLA, debt trend, upcoming renewals and the top decisions needed.")
+                   "use cases by tier, design review SLA, return on subscription, upcoming renewals and the top decisions needed.")
     inputs = ["metrics", "approvals", "agent_runs"]
     outputs = "BriefingPoint"
     finding_model = BriefingPoint
@@ -49,10 +49,10 @@ class ExecBriefing(Agent):
         d = m["design_review"]
         add("Design reviews", f"Median design review turnaround {d['median_hours']} hours over {d['reviewed']} reviews; {d['pending']} pending.",
             d["source_refs"], "design_docs")
-        dt = m["debt_trend"]
-        if dt["current"] is not None:
-            first = dt["points"][0]["score"]
-            add("Technical debt", f"Average debt score {dt['current']} (from {first} six months ago).", dt["source_refs"], "agent_runs")
+        roi = m["roi"]
+        add("Return on subscription", f"Identified savings are {roi['multiple']}x the {roi['plan']} plan fee "
+                                      f"({_usd(roi['annual_fee_usd'])}/yr); approved savings alone cover it {roi['approved_multiple']}x.",
+            s["source_refs"]["identified"], "agent_runs")
         up = m["upcoming"]["items"]
         if up:
             add("Lifecycle", f"{m['upcoming']['count']} end-of-support dates or renewals in the next 180 days; nearest: "

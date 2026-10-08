@@ -57,10 +57,9 @@ def applications(tenant: str = Depends(tenant_dep), quadrant: str | None = None,
     kg = get_kg(tenant)
     caps = repo.by_id("capabilities")
     users = repo.by_id("users")
-    time_out = latest(repo, "pf.time_classifier")
-    time_by = {f["app_id"]: f for f in (time_out or {}).get("findings", [])}
-    debt_out = latest(repo, "app.tech_debt_radar")
-    debt_by = {f["app_id"]: f for f in (debt_out or {}).get("findings", [])}
+    time_by: dict = {}
+    from app.agents.common import debt_scores
+    debt_by = debt_scores(_Ctx(tenant))
     flags: dict[str, list[str]] = {}
     for agent in ("pf.cost_license_optimizer", "pf.lifecycle_watcher"):
         out = latest(repo, agent)
@@ -105,7 +104,7 @@ def applications(tenant: str = Depends(tenant_dep), quadrant: str | None = None,
     if q:
         ql = q.lower()
         rows = [r for r in rows if ql in r["name"].lower() or ql in (r["vendor"] or "").lower() or ql in r["category"].lower()]
-    return {"items": rows, "total": len(rows), "time_run": run_meta(time_out)}
+    return {"items": rows, "total": len(rows)}
 
 
 @router.get("/portfolio/applications/{app_id}")
@@ -192,18 +191,6 @@ def lifecycle(tenant: str = Depends(tenant_dep)) -> dict:
     return {"run": run_meta(out), "items": (out or {}).get("findings", [])}
 
 
-@router.get("/portfolio/time")
-def time_view(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "pf.time_classifier")
-    kg = get_kg(tenant)
-    items = []
-    for f in (out or {}).get("findings", []):
-        n = kg.node(f["app_id"])
-        items.append({**f, "disposition": n["props_json"].get("disposition") if n else None})
-    return {"run": run_meta(out), "items": items}
-
-
 @router.get("/portfolio/savings")
 def savings_view(tenant: str = Depends(tenant_dep)) -> dict:
     repo = Repo(tenant)
@@ -259,7 +246,6 @@ def usecase(uc_id: str, tenant: str = Depends(tenant_dep)) -> dict:
     ds = repo.by_id("datasets")
     row["datasets"] = [ds[d] for d in row["dataset_ids"]]
     row["assets"] = [a for a in repo.all("ai_assets") if a["usecase_id"] == uc_id]
-    row["reference_architecture"] = latest(repo, "dai.ai_ref_arch_generator", {"usecase_id": uc_id})
     return row
 
 
@@ -326,22 +312,8 @@ def design(design_id: str, tenant: str = Depends(tenant_dep)) -> dict:
     d = repo.get("design_docs", design_id)
     if not d:
         raise HTTPException(404, "design not found")
-    threat = latest(repo, "app.threat_model_assistant", {"design_id": design_id})
-    if not threat:
-        base = latest(repo, "app.threat_model_assistant")
-        threat = base if base and base["findings"] and base["findings"][0]["subject_id"] == design_id else None
     idx = by_target(repo)
-    return {**d, "review": _review_index(repo).get(design_id), "threat_model": threat, "approvals": idx.get(design_id, [])}
-
-
-@router.get("/app/adrs")
-def adrs(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "app.adr_writer")
-    idx = approval_index(repo)
-    drafts = [{**f, "approval": idx.get(("publish_adr", f["source_discussion_id"]))} for f in (out or {}).get("findings", [])]
-    return {"run": run_meta(out), "drafts": drafts, "published": sorted(repo.all("adrs"), key=lambda a: a["date"], reverse=True),
-            "discussions": [{k: v for k, v in d.items() if k != "extracted"} for d in repo.all("discussions")]}
+    return {**d, "review": _review_index(repo).get(design_id), "approvals": idx.get(design_id, [])}
 
 
 @router.get("/app/drift")
@@ -360,121 +332,7 @@ def drift(tenant: str = Depends(tenant_dep)) -> dict:
             "tickets": [t for t in repo.all("tickets") if t["key"].startswith("SEC")]}
 
 
-@router.get("/app/debt")
-def debt(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "app.tech_debt_radar")
-    return {"run": run_meta(out), "items": _with_status(out, "add_to_debt_register", "app_id", repo)}
-
-
-@router.get("/app/apis")
-def apis(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "app.integration_api_architect")
-    apps = repo.by_id("applications")
-    kg = get_kg(tenant)
-    rows = []
-    for a in repo.all("apis"):
-        n = kg.node(a["id"])
-        rows.append({**a, "owner_app": apps[a["owner_app_id"]]["name"], "consumer_names": [apps[c]["name"] for c in a["consumers"]],
-                     "canonical": bool(n and n["props_json"].get("canonical")), "deprecated": bool(n and n["props_json"].get("deprecated"))})
-    idx = approval_index(repo)
-    findings = []
-    for f in (out or {}).get("findings", []):
-        findings.append({**f, "approval": idx.get(("designate_canonical_api", f.get("canonical_api_id")))})
-    return {"run": run_meta(out), "findings": findings, "apis": rows}
-
-
-# ---- Enterprise architecture -----------------------------------------------------------------
-
-@router.get("/ea/capabilities")
-def capabilities(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "ea.capability_curator")
-    by = {f["capability_id"]: f for f in (out or {}).get("findings", [])}
-    users = repo.by_id("users")
-    items = []
-    for c in repo.all("capabilities"):
-        f = by.get(c["id"], {})
-        items.append({**c, "heat_score": f.get("heat_score", c["strategic_importance"] * (5 - c["maturity"])),
-                      "app_count": f.get("app_count"), "flags": f.get("flags", []), "annual_cost_usd": f.get("annual_cost_usd"),
-                      "app_ids": f.get("app_ids", []), "owner": users.get(c["owner_user_id"], {}).get("name")})
-    return {"run": run_meta(out), "items": items}
-
-
-@router.get("/ea/goals")
-def goals(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    mapper = latest(repo, "ea.strategy_capability_mapper")
-    links = {f["goal_id"]: f for f in (mapper or {}).get("findings", [])}
-    kg = get_kg(tenant)
-    docs = repo.by_id("strategy_docs")
-    projects = repo.all("projects")
-    aidx = approval_index(repo)
-    items = []
-    for g in repo.all("goals"):
-        sup = [e for e in kg.in_edges(g["id"], "SUPPORTS")]
-        items.append({**g, "source_doc": docs[g["source_doc_id"]]["title"], "link": links.get(g["id"]),
-                      "approval": aidx.get(("link_goal_capability", g["id"])),
-                      "capability_links": [{"capability_id": e["from_id"], "name": kg.node(e["from_id"])["name"], "status": e["status"],
-                                            "strength": e["props_json"].get("strength")} for e in sup],
-                      "projects": [{"id": p["id"], "name": p["name"], "budget_usd": p["budget_usd"]} for p in projects if g["id"] in p["goal_ids"]]})
-    return {"run": run_meta(mapper), "items": items, "documents": [{k: v for k, v in d.items()} for d in repo.all("strategy_docs")]}
-
-
-@router.get("/ea/investment-alignment")
-def investment(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "ea.investment_traceability")
-    caps = repo.by_id("capabilities")
-    projects = [{**p, "capabilities": [caps[c]["name"] for c in p["capability_ids"]]} for p in repo.all("projects")]
-    idx = approval_index(repo)
-    items = []
-    for f in (out or {}).get("findings", []):
-        key = ("propose_funding_review", f["goal_id"]) if f["status"] == "unfunded" else ("flag_orphan_project", f["project_ids"][0]) \
-            if f["status"] == "orphan" else None
-        items.append({**f, "approval": idx.get(key) if key else None})
-    total = sum(p["budget_usd"] for p in projects)
-    orphan = sum(p["budget_usd"] for p in projects if not p["goal_ids"])
-    return {"run": run_meta(out), "items": items, "projects": projects,
-            "facts": {"total_budget": total, "orphan_budget": orphan, "aligned_pct": round(100 * (1 - orphan / total), 1) if total else 0}}
-
-
-@router.get("/ea/roadmaps")
-def roadmaps(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "ea.roadmap_drafter")
-    idx = approval_index(repo)
-    items = []
-    for f in (out or {}).get("findings", []):
-        tid = f"ROADMAP-{f['name'].split('-')[0].upper()}"
-        items.append({**f, "target_id": tid, "approval": idx.get(("adopt_roadmap_scenario", tid))})
-    return {"run": run_meta(out), "items": items}
-
-
-@router.get("/ea/impact-triggers")
-def impact_triggers(tenant: str = Depends(tenant_dep)) -> list[dict]:
-    return Repo(tenant).get_meta("impact_triggers", [])
-
-
-@router.get("/ea/board-pack")
-def board_pack(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "ea.board_assistant")
-    return {"run": run_meta(out), "pack": (out or {}).get("findings", [None])[0], "body_md": (out or {}).get("artifacts", {}).get("body_md")}
-
-
 # ---- Data architecture ------------------------------------------------------------------------
-
-@router.get("/data/datasets")
-def datasets(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    users = repo.by_id("users")
-    apps = repo.by_id("applications")
-    items = [{**d, "owner": users.get(d["owner_user_id"], {}).get("name"), "system": apps[d["system_app_id"]]["name"]}
-             for d in repo.all("datasets")]
-    return {"items": items}
-
 
 @router.get("/data/policy-findings")
 def policy_findings(tenant: str = Depends(tenant_dep)) -> dict:
@@ -486,15 +344,3 @@ def policy_findings(tenant: str = Depends(tenant_dep)) -> dict:
         apprs = [a for a in by_t.get(f["subject_id"], []) if a["action_type"] in ("apply_masking", "set_retention", "assign_owner", "block_pipeline")]
         items.append({**f, "approval": apprs[-1] if apprs else None})
     return {"run": run_meta(out), "items": items, "policies": repo.all("data_policies")}
-
-
-@router.get("/data/products")
-def products(tenant: str = Depends(tenant_dep)) -> dict:
-    repo = Repo(tenant)
-    out = latest(repo, "dai.data_product_designer")
-    idx = approval_index(repo)
-    items = []
-    for f in (out or {}).get("findings", []):
-        tid = f"DP-{f['domain'].upper().replace(' ', '_').replace('&', 'AND')}"
-        items.append({**f, "target_id": tid, "approval": idx.get(("approve_data_contract", tid))})
-    return {"run": run_meta(out), "items": items}

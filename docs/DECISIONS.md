@@ -1,6 +1,6 @@
 # Implementation decisions
 
-Decisions taken while building the prototype (spec §0.6 and §16). Most recent last.
+Decisions taken while building the prototype (original spec §0.6 and §16, see `ORIGINAL_PROTOTYPE_SPEC.md`). Most recent last.
 
 ## Open decisions from §16
 
@@ -65,3 +65,22 @@ Decisions taken while building the prototype (spec §0.6 and §16). Most recent 
 - **Frontend types**: `src/api/schema.d.ts` is generated from the running API's OpenAPI document (`npm run gen:api`); a small
   hand-written subset of shared shapes lives in `src/api/client.ts`.
 - **docker-compose**: not provided (optional in the spec); `make setup && make demo` is the supported path.
+
+## Startup edition: product cut
+
+This repository is a commercial cut of the Fractional AI Architecture Office prototype (original spec kept in
+`docs/ORIGINAL_PROTOTYPE_SPEC.md`). We kept what a mid-market buyer pays for and can see ROI from in weeks, and removed what
+needs a mature EA practice to be useful:
+
+| Kept (sellable) | Removed (and why) |
+|---|---|
+| Discovery, cost & license optimisation, overlaps, renewals/EOS, business cases (**SaaS & Cloud Savings**) | TIME classification (consultant framework; savings speak for themselves) |
+| AI use-case intake, risk tiers, model/agent registry, privacy policy checks, evidence packs (**AI Governance**) | Lineage mapper, data-product designer, AI reference-architecture generator (long implementation cycles) |
+| Design review, drift detection with L3 tickets (**Design Reviews & Drift**) | ADR writer, pattern advisor, API architect, tech-debt radar, threat-model assistant (engineering-team tools, crowded market) |
+| Copilot with follow-ups, approvals, audit trail, briefing, connected sources, automation settings | All Enterprise Architecture agents and pages (capabilities, strategy, investment, roadmaps, board) and the Graph Explorer |
+
+- New **/welcome** product page (modules, pricing, trust) with live proof numbers from the demo tenant.
+- New **Return on subscription** metric (`services/metrics.roi`), shown on the Overview and in the executive briefing.
+- Navigation renamed for buyers: Overview, SaaS & Cloud Savings, AI Governance, Design Reviews, Connected Sources, Automation Settings.
+- The knowledge graph and its API (`/kg/*`) remain as the platform layer under the Copilot and diagrams.
+- `docs/DEMO_SCRIPT.md` is now a 12-minute sales demo.

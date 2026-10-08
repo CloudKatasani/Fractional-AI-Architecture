@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api, AgentOutput, ApprovalRef, RunMeta } from "../api/client";
 import { AgentPanel, ApprovalControls } from "../components/AgentPanel";
-import { EvidenceList, TextWithChips } from "../components/Evidence";
+import { TextWithChips } from "../components/Evidence";
 import { PageHeader } from "../components/Layout";
-import { Mermaid } from "../components/Mermaid";
 import { Badge, Empty, ErrorBox, Loading, Modal, Stat, TierBadge, Tabs, Toggle, useTab, usd, usdShort } from "../components/ui";
+import { PrivacyTab } from "../components/ai/PrivacyTab";
 import { EvidencePackButton } from "../components/ai/EvidencePackButton";
 import {
-  BlockedBanner, ControlsChecklist, IdChip, DocChecklist, FlagBadge, RefChip, RiskResult, ScoreBar, TriggerList,
+  BlockedBanner, ControlsChecklist, IdChip, FlagBadge, RiskResult, ScoreBar, TriggerList,
 } from "../components/ai/shared";
 import { useApi, useApp } from "../state/AppState";
 
@@ -63,7 +63,7 @@ function TierCell({ u }: { u: UseCase }) {
 }
 
 // ---- Use-case detail (row click / "Classify risk") ----------------------------------------------------------------
-function UseCaseModal({ id, classify, onClose, onRefArch }: { id: string; classify: boolean; onClose: () => void; onRefArch: (id: string) => void }) {
+function UseCaseModal({ id, classify, onClose }: { id: string; classify: boolean; onClose: () => void }) {
   const { user, refresh, notify, users } = useApp();
   const { data: uc, loading, error } = useApi<any>(`/ai/usecases/${id}`, undefined, [id]);
   const [run, setRun] = useState<AgentOutput | null>(null);
@@ -96,8 +96,6 @@ function UseCaseModal({ id, classify, onClose, onRefArch }: { id: string; classi
 
   const owner = users.find((x) => x.id === uc?.owner_user_id);
   const fresh = run?.findings?.[0];
-  const refArch = uc?.reference_architecture;
-  const ra = refArch?.findings?.[0];
 
   return (
     <Modal open onClose={onClose} wide title={<span><span className="font-mono text-sm text-gray-500">{id}</span> {uc?.title || ""}</span>}>
@@ -185,14 +183,6 @@ function UseCaseModal({ id, classify, onClose, onRefArch }: { id: string; classi
                   ))}
                 </ul>
               ) : <div className="text-sm muted">No deployed assets linked.</div>}
-              <div className="label mt-4 mb-1">Reference architecture</div>
-              {ra ? (
-                <div className="text-sm">
-                  <Badge color="blue">{ra.pattern}</Badge> {ra.components?.length} components · {ra.controls?.length} controls · {ra.cost_band}{" "}
-                  <IdChip id={refArch.run_id} />
-                </div>
-              ) : <div className="text-sm muted">None generated yet.</div>}
-              <button className="btn btn-sm mt-2" onClick={() => onRefArch(id)}>{ra ? "Open reference design" : "Generate reference design"}</button>
             </div>
           </div>
         </div>
@@ -428,134 +418,11 @@ function AssetsTab() {
   );
 }
 
-function RefArchTab({ data, selected, onSelect }: { data: UseCaseList; selected: string; onSelect: (id: string) => void }) {
-  const { data: uc, loading } = useApi<any>(selected ? `/ai/usecases/${selected}` : null, undefined, [selected]);
-  const { data: apr } = useApi<{ items: any[] }>("/approvals", { agent_id: "dai.ai_ref_arch_generator" });
-  const [generated, setGenerated] = useState<Record<string, AgentOutput>>({});
-  const out: AgentOutput | null = generated[selected] || uc?.reference_architecture || null;
-  const f = out?.findings?.[0];
-  const approval = useMemo(() => {
-    const xs = (apr?.items || []).filter((a) => a.target_id === selected && a.action_type === "approve_reference_design");
-    xs.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
-    return xs[0] ? ({ ...xs[0] } as ApprovalRef) : null;
-  }, [apr, selected]);
-  const sorted = useMemo(() => [...data.items].sort((a, b) => (a.intake?.rank ?? 999) - (b.intake?.rank ?? 999)), [data]);
-  const u = data.items.find((x) => x.id === selected);
-  const { user, notify, refresh } = useApp();
-  const autoRan = useRef<Set<string>>(new Set());
-  const [genErr, setGenErr] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  // selecting a use case with no design on record generates one (POST /agents/run) — once per use case per visit
-  useEffect(() => {
-    if (!uc || uc.id !== selected || uc.reference_architecture || generated[selected] || autoRan.current.has(selected)) return;
-    autoRan.current.add(selected);
-    setGenerating(true);
-    setGenErr(null);
-    api
-      .post<AgentOutput>("/agents/run", { agent_id: "dai.ai_ref_arch_generator", params: { usecase_id: selected }, user_id: user?.id })
-      .then((o) => {
-        setGenerated((g) => ({ ...g, [selected]: o }));
-        refresh();
-        notify(`${o.agent_name}: reference design for ${selected}` + (o.approvals_created.length ? " sent to principal architect" : ""));
-      })
-      .catch((e) => setGenErr(e.message))
-      .finally(() => setGenerating(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uc, selected]);
-  const blocked = u ? isBlocked(u) : false;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="label">Use case</span>
-          <select className="input min-w-[26rem]" value={selected} onChange={(e) => onSelect(e.target.value)} data-testid="refarch-select">
-            {sorted.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.id} · {x.title} ({x.pattern}{effTier(x) ? `, ${effTier(x) === "unacceptable" ? "BLOCKED" : effTier(x)}` : ""})
-              </option>
-            ))}
-          </select>
-        </label>
-        {u && <TierCell u={u} />}
-      </div>
-      {blocked && <BlockedBanner>This use case is classified as a prohibited practice. A reference design is shown for the record only; no approval will be requested.</BlockedBanner>}
-      <AgentPanel
-        key={selected}
-        agentId="dai.ai_ref_arch_generator"
-        agentName="AI Reference Architecture Generator"
-        run={out}
-        params={{ usecase_id: selected }}
-        runLabel={out ? "Re-generate" : "Generate reference design"}
-        onRan={(o) => setGenerated((g) => ({ ...g, [selected]: o }))}
-      >
-        <ErrorBox error={genErr} />
-        {((loading && !uc) || generating) && <Loading label={generating ? "Generating reference design…" : undefined} />}
-        {!f && !loading && !generating && <Empty>No reference design generated for this use case yet — click “Generate reference design”.</Empty>}
-        {f && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Badge color="blue">pattern: {f.pattern}</Badge>
-              {f.platform && <Badge>platform: {f.platform}</Badge>}
-              {f.risk_tier && <TierBadge tier={f.risk_tier} />}
-              <Badge color="purple">cost band: {f.cost_band}</Badge>
-              <span className="ml-2 inline-flex items-center gap-1 text-xs"><span className="muted">Design approval</span> <ApprovalControls approval={approval} /></span>
-              <EvidenceList refs={f.source_refs} />
-            </div>
-            <div className="grid gap-4 lg:grid-cols-5">
-              <div className="lg:col-span-3 rounded border border-gray-200 bg-white p-3">
-                <div className="label mb-2">Data flow</div>
-                <Mermaid chart={f.diagram_mermaid} />
-              </div>
-              <div className="lg:col-span-2 space-y-3">
-                <div>
-                  <div className="label mb-1">Components ({f.components?.length})</div>
-                  <ol className="list-decimal pl-5 text-sm space-y-0.5">
-                    {f.components?.map((c: string) => <li key={c}>{c}</li>)}
-                  </ol>
-                </div>
-                <div>
-                  <div className="label mb-1">Evaluation plan</div>
-                  <DocChecklist items={f.eval_plan} />
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="label mb-1">Security & governance controls ({f.controls?.length})</div>
-              <table className="tbl">
-                <thead><tr><th>Control</th><th>Title</th><th>Source</th></tr></thead>
-                <tbody>
-                  {f.controls?.map((c: any, i: number) => (
-                    <tr key={`${c.id}-${i}`}>
-                      <td className="font-mono text-xs">{c.id}</td>
-                      <td>{c.title}</td>
-                      <td><RefChip id={c.source} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </AgentPanel>
-    </div>
-  );
-}
-
-// ---- Page ---------------------------------------------------------------------------------------------------------
 export default function AIGovernance() {
   const [tab, setTabState] = useTab("intake", "tab");
   const setTab = (t: string) => { setTabState(t); setUrlTab("tab", t); };
   const { data, loading, error } = useApi<UseCaseList>("/ai/usecases");
   const [open, setOpen] = useState<{ id: string; classify: boolean } | null>(null);
-  const [refSel, setRefSel] = useState<string>(() => new URLSearchParams(window.location.search).get("usecase") || "");
-
-  useEffect(() => {
-    if (!refSel && data?.items?.length) {
-      const first = [...data.items].sort((a, b) => (a.intake?.rank ?? 999) - (b.intake?.rank ?? 999))[0];
-      setRefSel(first.id);
-    }
-  }, [data, refSel]);
 
   const blocked = data?.items.filter(isBlocked).length || 0;
   const high = data?.items.filter((u) => effTier(u) === "high").length || 0;
@@ -563,8 +430,8 @@ export default function AIGovernance() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="AI Governance"
-        subtitle={data ? `${data.items.length} AI use cases · ${high} high risk · ${blocked} blocked — every tier traces to rule ids and source records.` : "Intake, risk tiering, registry and reference designs"}
+        title="AI Governance & Compliance"
+        subtitle={data ? `${data.items.length} AI use cases · ${high} high risk · ${blocked} blocked — every tier traces to rule ids and source records.` : "Intake, risk tiering, AI registry and privacy policies"}
         actions={<EvidencePackButton />}
       />
       <Tabs
@@ -572,24 +439,23 @@ export default function AIGovernance() {
           { id: "intake", label: "Intake backlog" },
           { id: "risk", label: <span>Risk register{blocked ? <span className="ml-1.5 rounded bg-red-600 px-1 text-[10px] font-bold text-white">{blocked} BLOCKED</span> : null}</span> },
           { id: "registry", label: "AI asset registry" },
-          { id: "refarch", label: "Reference architectures" },
+          { id: "privacy", label: "Data privacy & policies" },
         ]}
         active={tab}
         onChange={setTab}
       />
-      {tab !== "registry" && loading && !data && <Loading />}
-      {tab !== "registry" && <ErrorBox error={error} />}
+      {tab !== "registry" && tab !== "privacy" && loading && !data && <Loading />}
+      {tab !== "registry" && tab !== "privacy" && <ErrorBox error={error} />}
       {tab === "intake" && data && <IntakeTab data={data} onOpen={(id, classify) => setOpen({ id, classify })} />}
       {tab === "risk" && data && <RiskTab data={data} onOpen={(id, classify) => setOpen({ id, classify })} />}
       {tab === "registry" && <AssetsTab />}
-      {tab === "refarch" && data && refSel && <RefArchTab data={data} selected={refSel} onSelect={setRefSel} />}
+      {tab === "privacy" && <PrivacyTab />}
       {open && (
         <UseCaseModal
           key={`${open.id}-${open.classify}`}
           id={open.id}
           classify={open.classify}
           onClose={() => setOpen(null)}
-          onRefArch={(id) => { setOpen(null); setRefSel(id); setTab("refarch"); }}
         />
       )}
     </div>

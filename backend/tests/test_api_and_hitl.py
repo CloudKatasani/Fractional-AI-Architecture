@@ -27,8 +27,7 @@ def test_get_endpoints(client):
     for p in ["/tenants", "/metrics/dashboard", "/kg/nodes?type=Application", "/kg/graph", "/kg/impact?node_id=APP-0021",
               "/kg/lineage?dataset_id=DS-0001", "/kg/diagram?kind=capability_map", "/portfolio/applications", "/portfolio/overlaps",
               "/portfolio/lifecycle", "/portfolio/savings", "/portfolio/discovery", "/ai/usecases", "/ai/assets", "/ai/risk-summary",
-              "/app/designs", "/app/adrs", "/app/drift", "/app/debt", "/app/apis", "/ea/capabilities", "/ea/goals",
-              "/ea/investment-alignment", "/ea/roadmaps", "/data/datasets", "/data/policy-findings", "/data/products", "/agents",
+              "/app/designs", "/app/drift", "/data/policy-findings", "/agents",
               "/runs", "/approvals", "/audit", "/raw", "/raw/sso", "/records/APP-0001", "/copilot/suggestions"]:
         r = client.get("/api/v1" + p, headers=H)
         assert r.status_code == 200, (p, r.text[:200])
@@ -104,7 +103,7 @@ def test_autonomy_settings(client):
 def test_bulk_only_low_risk(client):
     u = users(client)
     pend = client.get("/api/v1/approvals", headers=H, params={"status": "pending"}).json()["items"]
-    risky = next(a for a in pend if a["action_type"] == "set_disposition")
+    risky = next(a for a in pend if a["action_type"] == "publish_review")
     r = client.post("/api/v1/approvals/bulk", headers=H, json={"ids": [risky["id"]], "user_id": u["principal_architect"]["id"]})
     assert r.status_code == 400
 
@@ -122,8 +121,8 @@ def test_briefing_evidence_orchestrate(client):
     assert "Executive briefing" in b["markdown"] and b["findings"]
     e = client.post("/api/v1/evidence/pack", headers=H, json={"regulation_or_policy_id": "NERC CIP"}).json()
     assert e["json"]["controls"]
-    o = client.post("/api/v1/orchestrate", headers=H, json={"request_text": "show me lineage and AI risk"}).json()
-    assert "dai.lineage_mapper" in o["routed_to"] and "dai.ai_risk_classifier" in o["routed_to"]
+    o = client.post("/api/v1/orchestrate", headers=H, json={"request_text": "check privacy policies and AI risk"}).json()
+    assert "dai.governance_policy_checker" in o["routed_to"] and "dai.ai_risk_classifier" in o["routed_to"]
 
 
 def test_audit_export(client):

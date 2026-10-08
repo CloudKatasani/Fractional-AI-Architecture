@@ -36,6 +36,9 @@ class Settings:
     seed: int = field(default_factory=lambda: int(os.environ.get("SEED", "42") or 42))
     data_dir: Path = field(default_factory=lambda: REPO_ROOT / (os.environ.get("DATA_DIR", "data") or "data"))
     max_output_tokens: int = 2000
+    # Commercial plan shown in the ROI tile and briefing (see docs/PRICING.md)
+    plan_name: str = field(default_factory=lambda: os.environ.get("PLAN_NAME", "Growth"))
+    plan_fee_usd: float = field(default_factory=lambda: float(os.environ.get("PLAN_FEE_USD", "60000") or 60000))
     # TIME classifier thresholds (Section 16.4)
     time_fit_threshold: float = 3.0
     time_health_threshold: float = 3.0

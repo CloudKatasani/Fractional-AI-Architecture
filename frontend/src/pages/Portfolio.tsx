@@ -6,22 +6,20 @@ import { InventoryTab } from "../components/portfolio/InventoryTab";
 import { LifecycleTab } from "../components/portfolio/LifecycleTab";
 import { OverlapsTab } from "../components/portfolio/OverlapsTab";
 import { SavingsTab } from "../components/portfolio/SavingsTab";
-import { TimeTab } from "../components/portfolio/TimeTab";
 import { Tabs, useTab } from "../components/ui";
 import { useApp } from "../state/AppState";
 
 const TABS = [
-  { id: "inventory", label: "Inventory" },
-  { id: "discovery", label: "Discovery" },
-  { id: "overlaps", label: "Overlaps" },
-  { id: "time", label: "TIME" },
-  { id: "lifecycle", label: "Lifecycle" },
   { id: "savings", label: "Savings" },
+  { id: "discovery", label: "Shadow IT" },
+  { id: "lifecycle", label: "Renewals & EOS" },
+  { id: "overlaps", label: "Overlapping tools" },
+  { id: "inventory", label: "App inventory" },
 ];
 
 export default function Portfolio() {
   const { tenantName } = useApp();
-  const [tab, setTab] = useTab("inventory", "tab");
+  const [tab, setTab] = useTab("savings", "tab");
   const [params, setParams] = useSearchParams();
 
   // keep ?tab= in the URL so tabs are linkable (Dashboard tiles deep-link here)
@@ -39,16 +37,15 @@ export default function Portfolio() {
   return (
     <div>
       <PageHeader
-        title="Portfolio"
-        subtitle={<>Application inventory, discovery, rationalization and savings for {tenantName}. Agent output is proposed until an owner or approver decides.</>}
+        title="SaaS & Cloud Savings"
+        subtitle={<>Shadow IT, unused licences, auto-renewal traps and overlapping tools for {tenantName} — every number backed by an invoice, login or contract record.</>}
       />
-      <Tabs tabs={TABS} active={TABS.some((t) => t.id === tab) ? tab : "inventory"} onChange={change} />
-      {(tab === "inventory" || !TABS.some((t) => t.id === tab)) && <InventoryTab />}
+      <Tabs tabs={TABS} active={TABS.some((t) => t.id === tab) ? tab : "savings"} onChange={change} />
+      {tab === "inventory" && <InventoryTab />}
       {tab === "discovery" && <DiscoveryTab />}
       {tab === "overlaps" && <OverlapsTab />}
-      {tab === "time" && <TimeTab />}
       {tab === "lifecycle" && <LifecycleTab />}
-      {tab === "savings" && <SavingsTab />}
+      {(tab === "savings" || !TABS.some((t) => t.id === tab)) && <SavingsTab />}
     </div>
   );
 }

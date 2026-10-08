@@ -39,13 +39,6 @@ def test_discovery_shadow_it(generated):
     assert {f.type for f in res.findings} >= {"cmdb_duplicate", "cmdb_stale", "alias_merge"}
 
 
-def test_time_quadrants_non_empty(generated):
-    for t in ("northgrid", "meridian"):
-        res = analyze(t, "pf.time_classifier")
-        q = Counter(f.quadrant for f in res.findings)
-        assert all(q[x] > 0 for x in ("Tolerate", "Invest", "Migrate", "Eliminate")), (t, q)
-
-
 def test_cost_optimizer_finds_traps(generated):
     res = analyze("northgrid", "pf.cost_license_optimizer")
     types = Counter(f.type for f in res.findings)
@@ -129,8 +122,12 @@ def test_evidence_pack(generated):
 
 @pytest.mark.parametrize("tenant", ["northgrid", "meridian"])
 def test_design_review_flags_planted_violations(generated, tenant):
-    res = analyze(tenant, "app.design_review")
-    by_title = {f.title: f for f in res.findings}
+    from app.db.session import Repo as _R
+
+    by_title = {}
+    for d in _R(tenant).all("design_docs"):
+        for f in analyze(tenant, "app.design_review", design_id=d["id"]).findings:
+            by_title[f.title] = f
     from data_gen.generators.core import TENANT_CATALOG, load_yaml
 
     for d in load_yaml(TENANT_CATALOG[tenant])["design_docs"]:
@@ -154,37 +151,6 @@ def test_drift_detector_finds_boundary_violations(generated, tenant):
     assert planted and planted == found
     assert "linkStyle" in res.artifacts["actual"]
 
-
-def test_tech_debt_correlates_with_incidents(generated):
-    res = analyze("northgrid", "app.tech_debt_radar")
-    assert res.facts["eol_incident_share"] >= 0.5
-    assert res.findings[0].score >= 60
-
-
-def test_adr_writer_and_pattern_advisor(generated):
-    res = analyze("northgrid", "app.adr_writer")
-    assert len(res.findings) == 8 and res.facts["skipped"] >= 10
-    res = analyze("northgrid", "app.pattern_advisor", text="stream meter events to analytics in real time")
-    assert res.findings[0].pattern_id == "PAT-02"
-
-
-def test_enterprise_agents(generated):
-    inv = analyze("northgrid", "ea.investment_traceability")
-    assert 20 <= inv.facts["orphan_pct"] <= 35
-    assert any("wildfire" in u["statement"].lower() for u in inv.facts["unfunded"])
-    cur = analyze("northgrid", "ea.capability_curator")
-    om = next(f for f in cur.findings if f.name == "Outage Management")
-    assert om.heat_score >= 12 and om.app_count >= 4
-    rm = analyze("northgrid", "ea.roadmap_drafter")
-    assert {f.name for f in rm.findings} == {"Cost-first", "Risk-first", "Speed-first"}
-    for trig in ("gis_exit", "puc_mandate", "coop_acquisition", "oms_eos"):
-        imp = analyze("northgrid", "ea.impact_analyst", trigger_id=trig).findings[0]
-        assert imp.affected["applications"], trig
-    mp = analyze("northgrid", "ea.strategy_capability_mapper")
-    assert all(f.capability_ids for f in mp.findings)
-
-
-# ---- Contract: every agent output is grounded --------------------------------------------------
 
 @pytest.mark.parametrize("agent_id", RUNNABLE)
 def test_every_agent_runs_and_cites(generated, agent_id):

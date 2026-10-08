@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../api/client";
 import { PageHeader } from "../components/Layout";
 import { EvidenceChip, TextWithChips } from "../components/Evidence";
@@ -32,7 +32,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title={`Dashboard — ${tenantName}`}
+        title={`Overview — ${tenantName}`}
         subtitle={`As of ${m.as_of}. Every number links to the records and approvals it was computed from.`}
         actions={<button className="btn-primary" onClick={genBriefing} disabled={briefing}>{briefing ? "Generating…" : "Generate executive briefing"}</button>}
       />
@@ -40,11 +40,11 @@ export default function Dashboard() {
         <Stat label="Inventory accuracy" value={`${m.inventory_accuracy.value}%`} sub={`${m.inventory_accuracy.confirmed} of ${m.inventory_accuracy.total} apps confirmed by owners`} onClick={() => nav("/portfolio")} accent />
         <Stat label="Savings identified / approved / realized" value={<span>{usdShort(s.identified)} <span className="text-base text-gray-400">/</span> {usdShort(s.approved)} <span className="text-base text-gray-400">/</span> {usdShort(s.realized)}</span>} sub="per year · from agent findings and approved decisions" onClick={() => nav("/portfolio?tab=savings")} />
         <Stat label="Design review median turnaround" value={m.design_review.median_hours !== null ? `${m.design_review.median_hours} h` : "—"} sub={`${m.design_review.reviewed} reviewed · ${m.design_review.pending} pending`} onClick={() => nav("/application")} />
-        <Stat label="Open policy & standard violations" value={m.violations.value} sub={`${m.violations.policy} data-policy · ${m.violations.standards} architecture`} onClick={() => nav("/data?tab=policies")} />
+        <Stat label="Open policy & standard violations" value={m.violations.value} sub={`${m.violations.policy} data-policy · ${m.violations.standards} architecture`} onClick={() => nav("/ai-governance?tab=privacy")} />
         <Stat label="Upcoming EOS / renewals (180 d)" value={m.upcoming.count} sub={m.upcoming.items[0] ? `next: ${m.upcoming.items[0].name} in ${m.upcoming.items[0].days} d` : "none"} onClick={() => nav("/portfolio?tab=lifecycle")} />
         <Stat label="Agent acceptance rate" value={m.acceptance.value !== null ? `${m.acceptance.value}%` : "—"} sub={`${m.acceptance.decided} decisions recorded`} onClick={() => nav("/agents")} />
         <Stat label="Pending approvals" value={m.pending_approvals} sub="across all roles" onClick={() => nav("/approvals")} />
-        <Stat label="Knowledge graph" value={m.counts.applications} sub={`applications · ${m.counts.datasets} datasets · ${m.counts.ai_usecases} AI use cases`} onClick={() => nav("/graph")} />
+        <Stat label="Return on subscription" value={m.roi.multiple ? `${m.roi.multiple}x` : "—"} sub={`identified savings vs ${usdShort(m.roi.annual_fee_usd)}/yr ${m.roi.plan} plan${m.roi.payback_days ? ` · payback ${m.roi.payback_days} d on approved` : ""}`} onClick={() => nav("/welcome")} accent />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -63,16 +63,16 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card title="Tech debt score trend" subtitle="average across scored apps (6 months; earlier points synthetic)">
+        <Card title="Savings pipeline" subtitle="per year — identified by agents, approved by people, realized after notice periods">
           <div className="h-56">
             <ResponsiveContainer>
-              <LineChart data={m.debt_trend.points}>
+              <BarChart data={[{ stage: "Identified", usd: s.identified }, { stage: "Approved", usd: s.approved }, { stage: "Realized", usd: s.realized }]}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis domain={["auto", "auto"]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Line dataKey="score" stroke="#1f5bd6" strokeWidth={2} dot />
-              </LineChart>
+                <XAxis dataKey="stage" tick={{ fontSize: 12 }} />
+                <YAxis tickFormatter={(v) => usdShort(v)} tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(v: number) => usd(v)} />
+                <Bar dataKey="usd" fill="#1f5bd6" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>

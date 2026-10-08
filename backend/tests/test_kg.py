@@ -17,7 +17,7 @@ def test_graph_nodes_and_edges(generated):
     etypes = {e["type"] for e in kg.edges.values()}
     for t in ("REALIZES", "OWNS", "DEPENDS_ON", "EXPOSES", "CONSUMES", "INTEGRATES_WITH", "IMPLEMENTED_IN", "RUNS_ON",
               "LICENSED_UNDER", "SOLD_BY", "PRODUCES", "CONSUMES_DATA", "STORED_IN", "USES_DATA", "IMPLEMENTS", "FUNDS", "TARGETS",
-              "CHANGES", "GOVERNED_BY", "VIOLATES", "AFFECTS", "DUPLICATES", "SUPPORTS", "OVERLAPS_WITH"):
+              "CHANGES", "GOVERNED_BY", "VIOLATES", "AFFECTS", "DUPLICATES", "OVERLAPS_WITH"):
         assert t in etypes, t
     # every node / edge has provenance
     assert all(n["source_refs_json"] for n in kg.nodes.values())

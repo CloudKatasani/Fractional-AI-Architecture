@@ -16,13 +16,9 @@ from app.kg.build import build_graph
 from app.services import audit
 
 BASELINE_ORDER = [
-    "pf.app_discovery", "pf.cost_license_optimizer", "pf.overlap_finder", "pf.time_classifier", "pf.lifecycle_watcher",
-    "pf.business_case_builder", "app.tech_debt_radar", "app.drift_detector", "app.integration_api_architect",
-    "app.design_review", "app.adr_writer", "app.pattern_advisor", "app.threat_model_assistant",
+    "pf.app_discovery", "pf.cost_license_optimizer", "pf.overlap_finder", "pf.lifecycle_watcher",
+    "pf.business_case_builder", "app.drift_detector", "app.design_review",
     "dai.governance_policy_checker", "dai.ai_usecase_intake", "dai.ai_risk_classifier", "dai.model_agent_registry_steward",
-    "dai.lineage_mapper", "dai.data_product_designer", "dai.ai_ref_arch_generator",
-    "ea.strategy_capability_mapper", "ea.capability_curator", "ea.investment_traceability", "ea.roadmap_drafter",
-    "ea.impact_analyst", "ea.board_assistant",
 ]
 
 
@@ -66,12 +62,10 @@ def seed_history(tenant_id: str) -> int:
     take("tag_resources", 2, days=33)
     take("renegotiate_contract", 1, note="Procurement confirmed lower seat count at renewal",
          pred=lambda a: not any(n in a["rationale"] for n in demo_names) and "Right-size" in a["rationale"], days=45)
-    take("set_disposition", 2, pred=lambda a: a["payload_json"].get("quadrant") == "Eliminate", days=28)
-    take("publish_review", 0)
+    take("publish_review", 2, pred=lambda a: a["payload_json"].get("verdict") == "pass", days=28)
     take("register_asset", 1, days=20)
     take("set_retention", 1, days=18)
     take("approve_exception", 1, decision="reject", note="Integration must be registered first", days=16)
-    take("add_to_debt_register", 2, days=14)
     take("create_renewal_task", 1, days=12, pred=lambda a: not any(n in a["rationale"] for n in demo_names))
     n = 0
     for a, decision, note, days in picks:

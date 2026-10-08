@@ -5,18 +5,15 @@ import { EvidenceDrawer } from "./Evidence";
 import { Badge } from "./ui";
 
 const NAV = [
-  { to: "/", label: "Dashboard" },
-  { to: "/portfolio", label: "Portfolio" },
+  { to: "/", label: "Overview" },
+  { to: "/portfolio", label: "SaaS & Cloud Savings" },
   { to: "/ai-governance", label: "AI Governance" },
-  { to: "/application", label: "Application Architecture" },
-  { to: "/enterprise", label: "Enterprise Architecture" },
-  { to: "/data", label: "Data Architecture" },
+  { to: "/application", label: "Design Reviews" },
   { to: "/copilot", label: "Copilot" },
   { to: "/approvals", label: "Approvals" },
-  { to: "/audit", label: "Audit" },
-  { to: "/graph", label: "Graph Explorer" },
-  { to: "/agents", label: "Agents" },
-  { to: "/sources", label: "Ingested Sources" },
+  { to: "/audit", label: "Audit Trail" },
+  { to: "/sources", label: "Connected Sources" },
+  { to: "/agents", label: "Automation Settings" },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -25,8 +22,10 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-gray-200 bg-white px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-7 w-7 items-center justify-center rounded bg-accent-600 text-xs font-bold text-white">AO</div>
-          <div className="text-sm font-semibold text-gray-900">Fractional AI Architecture Office</div>
+          <NavLink to="/welcome" className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded bg-accent-600 text-xs font-bold text-white">FA</div>
+            <div className="text-sm font-semibold text-gray-900">Fractional AI Architecture</div>
+          </NavLink>
           <select className="input py-1 ml-3" value={tenant} onChange={(e) => setTenant(e.target.value)} data-testid="tenant-select">
             {TENANTS.map((t) => (
               <option key={t.id} value={t.id}>{t.name} ({t.industry})</option>
@@ -71,7 +70,10 @@ export function Layout({ children }: { children: ReactNode }) {
               {n.label}
             </NavLink>
           ))}
-          {config && <div className="mt-6 px-4 text-[11px] muted">Demo date {config.demo_today}</div>}
+          <NavLink to="/welcome" className="mx-4 mt-6 block rounded-md border border-accent-100 bg-accent-50 px-3 py-2 text-xs text-accent-700 hover:border-accent-500">
+            Product & pricing →
+          </NavLink>
+          {config && <div className="mt-4 px-4 text-[11px] muted">Demo customer data · {config.demo_today}</div>}
         </nav>
         <main className="min-w-0 flex-1 p-5">{children}</main>
       </div>
