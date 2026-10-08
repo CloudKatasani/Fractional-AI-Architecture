@@ -41,3 +41,7 @@ files = ["backend/app", "data_gen"]
 
 [tool.coverage.run]
 source = ["backend/app/agents", "backend/app/kg", "data_gen"]
+
+[tool.ruff.lint.per-file-ignores]
+# place() is a closure used only within the same loop iteration
+"backend/app/agents/enterprise/roadmap_drafter.py" = ["B023"]

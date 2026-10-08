@@ -70,17 +70,28 @@ class RoadmapDrafter(Agent):
             quarters = [{"label": lbl, "items": []} for lbl in q]
             capacity = [4] * 6
             placed: dict[str, int] = {}
-            for it in ordered:
+            by_id = {x["id"]: x for x in ordered}
+
+            def place(it: dict) -> None:
+                if it["id"] in placed:
+                    return
+                for d in it.get("depends_on", []):  # dependencies first
+                    if d in by_id:
+                        place(by_id[d])
                 start = max([placed[d] + 1 for d in it.get("depends_on", []) if d in placed] or [0])
-                if it.get("deadline_days") is not None and name == "Risk-first":
-                    start = min(start, max(0, it["deadline_days"] // 92 - 1))
-                for qi in range(start, 6):
-                    if capacity[qi] >= it["effort"] or qi == 5:
-                        capacity[qi] -= it["effort"]
-                        placed[it["id"]] = qi
-                        quarters[qi]["items"].append({"id": it["id"], "title": it["title"], "type": it["type"],
-                                                      "ref_ids": it["ref_ids"], "depends_on": it.get("depends_on", [])})
-                        break
+                last = 5
+                if it.get("deadline_days") is not None:  # must land before end of support
+                    last = max(start, min(5, it["deadline_days"] // 92 - 1))
+                    if name == "Risk-first":
+                        start = min(start, last)
+                qi = next((i for i in range(start, last + 1) if capacity[i] >= it["effort"]), last)
+                capacity[qi] -= it["effort"]
+                placed[it["id"]] = qi
+                quarters[qi]["items"].append({"id": it["id"], "title": it["title"], "type": it["type"],
+                                              "ref_ids": it["ref_ids"], "depends_on": it.get("depends_on", [])})
+
+            for it in ordered:
+                place(it)
             savings_by_q4 = sum(it["savings"] for it in items if placed.get(it["id"], 9) <= 3)
             risk_closed = sum(1 for it in items if it["risk"] >= 5 and placed.get(it["id"], 9) <= 1)
             refs = [ev(r, "applications" if r.startswith("APP") else ("integrations" if r.startswith("INT") else "goals"), None)

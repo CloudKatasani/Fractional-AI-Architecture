@@ -272,8 +272,9 @@ def audit_list(tenant: str = Depends(tenant_dep), actor: str | None = None, agen
 
 @router.get("/audit/export")
 def audit_export(tenant: str = Depends(tenant_dep), format: str = "json", actor: str | None = None, agent: str | None = None,
-                 subject: str | None = None, from_: str | None = Query(None, alias="from"), to: str | None = None):  # noqa: ANN201
-    rows = _audit_rows(tenant, actor, agent, subject, from_, to)
+                 subject: str | None = None, from_: str | None = Query(None, alias="from"), to: str | None = None,
+                 event_type: str | None = None):  # noqa: ANN201
+    rows = _audit_rows(tenant, actor, agent, subject, from_, to, event_type)
     if format == "csv":
         buf = io.StringIO()
         w = csv.DictWriter(buf, fieldnames=["id", "ts", "actor_type", "actor_id", "event_type", "subject_type", "subject_id",

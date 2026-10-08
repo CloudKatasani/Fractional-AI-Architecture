@@ -27,7 +27,8 @@ def capability_map(kg: KG, tenant_name: str) -> str:
         for c in sorted(children.get(parent, []), key=lambda x: x["id"]):
             heat = c["props_json"]["strategic_importance"] * (5 - c["props_json"]["maturity"])
             marker = " 🔥" if heat >= 12 else ""
-            lines.append("  " * (depth + 1) + f"{_label(c['name'])}{marker}")
+            name = _label(c["name"]).replace("(", "- ").replace(")", "").replace("&", "and")
+            lines.append("  " * (depth + 1) + f"{name}{marker}")
             if depth < 2:
                 walk(c["id"], depth + 1)
 
@@ -147,7 +148,7 @@ def drift_diagrams(kg: KG, app_ids: list[str], boundary_pairs: set[tuple[str, st
         for f, t, kind in edges:
             arrow = "==>" if kind == "db_link" else ("-.->" if kind == "undeclared" else "-->")
             lines.append(f"  {_id(f)} {arrow}|{kind}| {_id(t)}")
-            if highlight and ((f, t) in boundary_pairs or kind == "db_link"):
+            if highlight and (f, t) in boundary_pairs:
                 red.append(link_idx)
             link_idx += 1
         for i in red:

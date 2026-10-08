@@ -27,7 +27,7 @@ export function InventoryTab() {
 
   const rows = useMemo(() => {
     const ql = q.trim().toLowerCase();
-    let xs = apps.filter((a) => {
+    const xs = apps.filter((a) => {
       if (ql && !`${a.id} ${a.name} ${a.vendor} ${a.owner || ""} ${a.category}`.toLowerCase().includes(ql)) return false;
       if (quadrant && (a.disposition || a.proposed_disposition) !== quadrant) return false;
       if (flag && !a.flags.includes(flag)) return false;

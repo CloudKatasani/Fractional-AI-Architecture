@@ -5,7 +5,7 @@ import { AgentPanel, ApprovalControls } from "../components/AgentPanel";
 import { EvidenceList, TextWithChips } from "../components/Evidence";
 import { PageHeader } from "../components/Layout";
 import { Mermaid } from "../components/Mermaid";
-import { Badge, Card, Empty, ErrorBox, Loading, Modal, Stat, TierBadge, Tabs, Toggle, useTab, usd, usdShort } from "../components/ui";
+import { Badge, Empty, ErrorBox, Loading, Modal, Stat, TierBadge, Tabs, Toggle, useTab, usd, usdShort } from "../components/ui";
 import { EvidencePackButton } from "../components/ai/EvidencePackButton";
 import {
   BlockedBanner, ControlsChecklist, IdChip, DocChecklist, FlagBadge, RefChip, RiskResult, ScoreBar, TriggerList,

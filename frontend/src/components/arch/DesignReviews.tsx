@@ -65,7 +65,8 @@ function DesignDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const { user, notify, refresh } = useApp();
   const { data: d, loading, error } = useApi<any>(`/app/designs/${id}`, undefined, [id]);
   const review = d?.review;
-  const concerns: any[] = review?.concerns || [];
+  const SEV: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+  const concerns: any[] = [...(review?.concerns || [])].sort((a, b) => (SEV[a.severity] ?? 9) - (SEV[b.severity] ?? 9));
   const runMeta = useRunMeta(
     "app.design_review",
     review?.run_id,

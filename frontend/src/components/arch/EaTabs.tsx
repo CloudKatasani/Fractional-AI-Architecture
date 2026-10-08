@@ -46,6 +46,15 @@ function Tile({ c, selected, onClick, big }: { c: any; selected: boolean; onClic
   );
 }
 
+/** Mermaid mindmap treats ( ) [ ] { } in node text as shape delimiters — swap them for look-alikes (root line excepted). */
+function sanitizeMindmap(src?: string): string | undefined {
+  if (!src) return src;
+  return src
+    .split("\n")
+    .map((l, i) => (i === 0 || /root\(\(/.test(l) ? l : l.replace(/\(/g, "（").replace(/\)/g, "）").replace(/\[/g, "［").replace(/\]/g, "］").replace(/[{}]/g, "")))
+    .join("\n");
+}
+
 export function CapabilityHeatMap() {
   const { data, loading, error } = useApi<any>("/ea/capabilities");
   const [sel, setSel] = useState<string | null>(null);
@@ -72,7 +81,7 @@ export function CapabilityHeatMap() {
           <span className="ml-auto"><Toggle checked={mindmap} onChange={setMindmap} label="Capability map (Mermaid mindmap)" /></span>
         </div>
         {mindmap ? (
-          diag ? <Mermaid chart={diag.mermaid} /> : <Loading />
+          diag ? <Mermaid chart={sanitizeMindmap(diag.mermaid)} /> : <Loading />
         ) : (
           <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="space-y-2">

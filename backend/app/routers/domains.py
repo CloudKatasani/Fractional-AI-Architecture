@@ -410,10 +410,12 @@ def goals(tenant: str = Depends(tenant_dep)) -> dict:
     kg = get_kg(tenant)
     docs = repo.by_id("strategy_docs")
     projects = repo.all("projects")
+    aidx = approval_index(repo)
     items = []
     for g in repo.all("goals"):
         sup = [e for e in kg.in_edges(g["id"], "SUPPORTS")]
         items.append({**g, "source_doc": docs[g["source_doc_id"]]["title"], "link": links.get(g["id"]),
+                      "approval": aidx.get(("link_goal_capability", g["id"])),
                       "capability_links": [{"capability_id": e["from_id"], "name": kg.node(e["from_id"])["name"], "status": e["status"],
                                             "strength": e["props_json"].get("strength")} for e in sup],
                       "projects": [{"id": p["id"], "name": p["name"], "budget_usd": p["budget_usd"]} for p in projects if g["id"] in p["goal_ids"]]})

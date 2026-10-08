@@ -50,6 +50,7 @@ export default function Audit() {
   const { data: agents } = useApi<any>("/agents");
   const [f, setF] = useState({ actor: "", agent: "", subject: "", from: "", to: "", event_type: "" });
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const [shown, setShown] = useState(150);
   const { data, loading, error } = useApi<any>("/audit", { ...f, limit: 1000 }, [JSON.stringify(f)]);
   const items: any[] = data?.items || [];
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
@@ -124,25 +125,25 @@ export default function Audit() {
               <tr><th className="w-6"></th><th>Time (UTC)</th><th>Actor</th><th>Event</th><th>Subject</th><th>Details</th><th>Run</th><th>Approval</th></tr>
             </thead>
             <tbody>
-              {items.map((e) => {
+              {items.slice(0, shown).map((e) => {
                 const isOpen = open.has(e.id);
                 return (
                   <Fragment key={e.id}>
                     <tr className="cursor-pointer" onClick={() => toggle(e.id)}>
                       <td className="text-xs muted">{isOpen ? "▾" : "▸"}</td>
-                      <td className="font-mono text-xs whitespace-nowrap">{(e.ts || "").replace("T", " ")}</td>
+                      <td className="font-mono text-xs whitespace-nowrap">{(e.ts || "").slice(0, 10)}<div className="muted">{(e.ts || "").slice(11, 19)}</div></td>
                       <td className="whitespace-nowrap">
-                        <Badge color={ACTOR_COLOR[e.actor_type] || "gray"}>{e.actor_type}</Badge>{" "}
-                        <span className={e.actor_type === "agent" ? "font-mono text-xs" : "text-sm"}>
+                        <Badge color={ACTOR_COLOR[e.actor_type] || "gray"}>{e.actor_type}</Badge>
+                        <div className={e.actor_type === "agent" ? "font-mono text-[11px]" : "text-sm"}>
                           {e.actor_type === "user" ? userName(e.actor_id) || e.actor_id : e.actor_id}
-                        </span>
+                        </div>
                       </td>
                       <td><Badge color={EVENT_COLOR[e.event_type] || "gray"}>{e.event_type.replace(/_/g, " ")}</Badge></td>
                       <td className="whitespace-nowrap">
-                        {!e.subject_id ? <span className="muted text-xs">—</span> : /^[A-Z]{2,5}-[A-Za-z0-9-]+$/.test(e.subject_id) ? <EvidenceChip id={e.subject_id} /> : <span className="font-mono text-xs mr-1" title={e.subject_id}>{e.subject_id.length > 32 ? e.subject_id.slice(0, 30) + "…" : e.subject_id}</span>}
-                        {e.subject_type && <span className="text-[11px] muted">{e.subject_type}</span>}
+                        {!e.subject_id ? <span className="muted text-xs">—</span> : /^[A-Z]{2,5}-[A-Za-z0-9-]+$/.test(e.subject_id) ? <EvidenceChip id={e.subject_id} /> : <span className="font-mono text-xs mr-1" title={e.subject_id}>{e.subject_id.length > 22 ? e.subject_id.slice(0, 20) + "…" : e.subject_id}</span>}
+                        {e.subject_type && <div className="text-[10px] muted">{e.subject_type}</div>}
                       </td>
-                      <td className="text-xs text-gray-700 max-w-xl">{summarize(e)}</td>
+                      <td className="text-xs text-gray-700 min-w-[12rem]">{summarize(e)}</td>
                       <td className="whitespace-nowrap">{e.run_id ? <EvidenceChip id={e.run_id} /> : <span className="muted text-xs">—</span>}</td>
                       <td className="whitespace-nowrap">{e.approval_id ? <EvidenceChip id={e.approval_id} /> : <span className="muted text-xs">—</span>}</td>
                     </tr>
@@ -160,6 +161,9 @@ export default function Audit() {
               })}
             </tbody>
           </table>
+          {items.length > shown && (
+            <div className="px-4 py-2"><button className="btn btn-sm" onClick={() => setShown((n) => n + 300)}>Show more ({items.length - shown} remaining)</button></div>
+          )}
           {data && items.length === 0 && <Empty>No audit events match these filters.</Empty>}
         </div>
       </Card>
