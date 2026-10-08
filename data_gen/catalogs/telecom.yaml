@@ -1047,7 +1047,7 @@ impact_triggers:
 
 copilot_questions:
   - Which systems realize Billing & Revenue Management?
-  - Show lineage for the subscriber usage dataset
+  - What does shadow IT cost us?
   - Which AI use cases are high risk and why?
   - Where do BSS and OSS share a database?
   - Which APIs are duplicated?

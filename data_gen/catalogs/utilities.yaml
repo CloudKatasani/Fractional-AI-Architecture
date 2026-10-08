@@ -1084,9 +1084,9 @@ copilot_questions:
   - What would break if we retired the legacy document system?
   - Which integrations cross the IT/OT boundary?
   - How much do we spend on BI tools?
-  - Which projects have no strategic goal?
+  - Which AI use cases are high risk and why?
   - Who owns meter data and what AI uses it?
-  - Show lineage for the Customer Usage Daily dataset
+  - Which design reviews are pending?
 
 low_quality_datasets: [Tamper Alerts, Asset Failures, Hazard Trees, Crew Roster]
 
