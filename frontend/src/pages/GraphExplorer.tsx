@@ -104,7 +104,20 @@ export default function GraphExplorer() {
 
   const fg = useRef<ForceGraphMethods<any, any>>();
   useEffect(() => {
-    const t = window.setTimeout(() => fg.current?.zoomToFit(400, 40), 1200);
+    const g = fg.current as any;
+    if (g) {
+      g.d3Force("charge")?.strength(focus ? -140 : -40);
+      g.d3Force("link")?.distance(focus ? 60 : 30);
+      g.d3ReheatSimulation?.();
+    }
+    const t = window.setTimeout(() => {
+      const f = fg.current;
+      if (!f) return;
+      f.zoomToFit(400, 50);
+      window.setTimeout(() => {
+        if (f.zoom() > 2.2) f.zoom(2.2, 300);
+      }, 450);
+    }, 1400);
     return () => window.clearTimeout(t);
   }, [graph]);
 
@@ -205,7 +218,8 @@ export default function GraphExplorer() {
           </div>
         </aside>
 
-        <div ref={wrap} className="card relative min-w-0 flex-1 overflow-hidden">
+        <div className="card flex min-w-0 flex-1 overflow-hidden">
+        <div ref={wrap} className="relative min-w-0 flex-1 overflow-hidden">
           {error && <div className="absolute left-3 top-3 z-10"><ErrorBox error={error} /></div>}
           {loading && <div className="absolute left-3 top-1 z-10"><Loading label="Loading graph…" /></div>}
           <div className="absolute right-3 top-2 z-10 text-[11px] muted">{graph.nodes.length} nodes · {graph.links.length} edges</div>
@@ -273,6 +287,7 @@ export default function GraphExplorer() {
               ctx.fill();
             }}
           />
+        </div>
           {sel && (
             <NodeDrawer
               id={sel}
@@ -295,7 +310,7 @@ function NodeDrawer({ id, onClose, onFocus, onSelect, onExplain, onOpen }: {
   const { data: n, loading, error } = useApi<any>(`/kg/nodes/${encodeURIComponent(id)}`, undefined, [id]);
   const edges = n ? [...(n.out_edges || []).map((e: any) => ({ ...e, dir: "out" })), ...(n.in_edges || []).map((e: any) => ({ ...e, dir: "in" }))] : [];
   return (
-    <aside className="absolute right-0 top-0 z-20 flex h-full w-[24rem] flex-col border-l border-gray-200 bg-white shadow-xl">
+    <aside className="flex h-full w-[24rem] shrink-0 flex-col border-l border-gray-200 bg-white">
       <div className="flex items-start justify-between gap-2 border-b border-gray-200 px-4 py-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">

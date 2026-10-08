@@ -194,6 +194,10 @@ class Agent:
         valid, invalid = [], []
         for f in raw:
             data = f.model_dump() if isinstance(f, BaseModel) else f
+            if isinstance(data.get("source_refs"), list):  # de-duplicate citations, keep order
+                seen: set[str] = set()
+                data["source_refs"] = [r for r in data["source_refs"]
+                                       if not (r.get("record_id") in seen or seen.add(r.get("record_id")))]
             try:
                 valid.append(self.finding_model.model_validate(data).model_dump())
             except ValidationError as exc:

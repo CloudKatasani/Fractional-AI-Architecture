@@ -37,7 +37,7 @@ def _env() -> Environment:
     env = Environment(loader=FileSystemLoader(str(TEMPLATES)), autoescape=select_autoescape([]), undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True)
     env.filters["usd"] = lambda v: f"${(v or 0):,.0f}"
-    env.filters["refs"] = lambda ids, n=3: ", ".join(list(ids)[:n])
+    env.filters["refs"] = lambda ids, n=3: ", ".join(f"[{i}]" for i in list(ids)[:n])
     env.filters["plural"] = lambda n, word, pl=None: f"{n} {word if n == 1 else (pl or word + 's')}"
     return env
 

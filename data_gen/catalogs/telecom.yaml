@@ -1070,6 +1070,6 @@ cpni_marketing_feeds:
   - {name: usage_to_campaign_audiences, dataset: Subscriber Usage Daily, target: Campaign Responses}
   - {name: roaming_travellers_segment_export, dataset: Roaming Records, target: Customer Segments}
 
-retired_cis: [Coastline Rating Engine v3, Prepaid IVR 2011, Legacy Dealer Commissions, WAP Gateway]
+retired_cis: [Coastline Rating Engine v3, Prepaid IVR 2011, Handset Insurance Claims 2010, WAP Gateway]
 
 evidence_regulations: [GDPR-like data protection law, Telecom customer privacy law (CPNI), PCI DSS, Data residency for subscriber data]

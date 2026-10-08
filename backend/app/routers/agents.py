@@ -52,6 +52,8 @@ class SettingsPatch(BaseModel):
 def patch_settings(agent_id: str, body: SettingsPatch, tenant: str = Depends(tenant_dep)) -> dict:
     repo = Repo(tenant)
     get_agent(agent_id)
+    if not body.user_id:
+        raise HTTPException(403, "user_id is required; only the principal architect can change autonomy levels")
     if body.user_id:
         u = repo.get("users", body.user_id)
         if not u or u["role"] != "principal_architect":
