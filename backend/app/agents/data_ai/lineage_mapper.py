@@ -47,9 +47,10 @@ class LineageMapper(Agent):
         upstream = [item(i) for i in up["datasets"] + up["pipelines"] + up["systems"]]
         downstream = [item(i) for i in down["datasets"] + down["pipelines"] + down["bi_assets"] + down["ai"]]
         flags = []
+        scope = {root} | set(up["datasets"]) | set(down["datasets"])
         for a in ctx.repo.all("ai_assets"):
             for d in a["data_used"]:
-                if ds[d]["quality_score"] < 0.6:
+                if d in scope and d in ds and ds[d]["quality_score"] < 0.6:
                     flags.append({"dataset_id": d, "dataset": ds[d]["name"], "quality_score": ds[d]["quality_score"],
                                   "ai_asset_id": a["id"], "ai_asset": a["name"]})
         refs = [ev(root, "datasets", f"{ds[root]['name']} ({ds[root]['classification']}, owner {ctx.user_name(ds[root]['owner_user_id'])})")]

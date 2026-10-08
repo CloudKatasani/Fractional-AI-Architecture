@@ -28,7 +28,7 @@ export function LifecycleTab() {
         <Stat label="Vendor EOS ≤ 12 months" value={eos.length} sub={eos[0] ? `nearest: ${[...eos].sort((a, b) => a.days_remaining - b.days_remaining)[0].name}` : "none"} />
         <Stat label="Renewals ≤ 180 days" value={ren.length} sub={`${usd(ren.reduce((s, r) => s + (r.annual_value_usd || 0), 0))}/yr in contract value`} />
         <Stat label="Auto-renew, < 50% used" value={autoLow.length} sub="decide before the notice window" accent={autoLow.length > 0} />
-        <Stat label="EOL frameworks" value={eol.length} sub={`${eol.filter((e) => e.severity === "critical").length} critical`} />
+        <Stat label="EOL frameworks" value={eol.length} sub={`${eol.filter((e) => e.severity === "critical").length} critical · ${eol.filter((e) => e.severity === "high").length} high severity`} />
       </div>
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -92,7 +92,7 @@ export function LifecycleTab() {
           <tbody>
             {eol.map((i) => (
               <tr key={`${i.app_id}-${i.source_refs?.[0]?.record_id}`}>
-                <td><EvidenceChip id={i.app_id} /> {i.name}</td>
+                <td className="whitespace-nowrap"><EvidenceChip id={i.app_id} /> {i.name}</td>
                 <td>{i.criticality ?? "—"}</td>
                 <td><SeverityBadge severity={i.severity} /></td>
                 <td><EvidenceList refs={i.source_refs} max={3} /><div className="text-[11px] muted">{i.source_refs?.[0]?.excerpt}</div></td>

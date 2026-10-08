@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AgentOutput, api } from "../api/client";
 import { TextWithChips } from "../components/Evidence";
 import { PageHeader } from "../components/Layout";
-import { Badge, ErrorBox, Loading, pct, since } from "../components/ui";
+import { Badge, ErrorBox, Loading, since } from "../components/ui";
 import { ROLE_LABELS, useApi, useApp } from "../state/AppState";
 
 const LEVELS = [
@@ -32,7 +32,7 @@ function RecentRuns({ agentId }: { agentId: string }) {
       <tbody>
         {data.map((r) => (
           <tr key={r.id}>
-            <td className="font-mono text-[11px]">{r.id}</td>
+            <td className="whitespace-nowrap font-mono text-[11px]">{r.id}</td>
             <td className="whitespace-nowrap text-xs" title={r.started_at}>{since(r.started_at)}</td>
             <td className="text-xs">{r.trigger}</td>
             <td className="text-xs">L{r.autonomy_level}</td>
@@ -141,7 +141,7 @@ function AgentCard({ a, rules }: { a: any; rules: Record<string, string> }) {
         <div>
           <div className="muted">Acceptance 30d</div>
           <div className={`text-sm font-semibold ${a.acceptance_rate_30d >= 0.9 ? "text-green-700" : a.acceptance_rate_30d >= 0.8 ? "text-gray-900" : a.acceptance_rate_30d != null ? "text-amber-700" : "text-gray-400"}`}>
-            {a.acceptance_rate_30d != null ? pct(a.acceptance_rate_30d) : "—"}
+            {a.acceptance_rate_30d != null ? `${Math.round(a.acceptance_rate_30d * 1000) / 10}%` : "—"}
           </div>
           <div className="text-[11px] muted">{a.decided_30d ?? 0} decisions</div>
         </div>

@@ -56,15 +56,15 @@ export function OverlapsTab() {
             .sort((a: any, b: any) => b.score - a.score);
           return (
             <div key={c.cluster_id} className="rounded-lg border border-gray-200 p-3" data-testid={`cluster-${c.cluster_id}`}>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[11px] muted">{c.cluster_id}</span>
                     <EvidenceChip id={c.capability_id} />
                   </div>
                   <div className="text-sm font-semibold text-gray-900">{c.capability_name} <span className="font-normal muted">· {c.category}</span></div>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <div className="text-lg font-semibold text-accent-600">{usd(c.est_savings_usd)}</div>
                   <div className="text-[11px] muted">est. savings / yr · feature overlap {Math.round((c.similarity || 0) * 100)}%</div>
                 </div>

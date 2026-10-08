@@ -197,3 +197,10 @@ export function IdChip({ id, label, title }: { id: string; label?: string; title
     </span>
   );
 }
+
+/** Rough minimum render width for a Mermaid flowchart so big graphs scroll instead of shrinking to unreadable. */
+export function mermaidMinWidth(chart?: string | null): number | undefined {
+  if (!chart) return undefined;
+  const lines = chart.split("\n").length;
+  return lines > 30 ? Math.min(2600, lines * 14) : undefined;
+}

@@ -273,7 +273,8 @@ def ai_assets(tenant: str = Depends(tenant_dep)) -> dict:
     items = []
     for a in repo.all("ai_assets"):
         n = kg.node(a["id"])
-        items.append({**a, "flags": flags.get(a["id"], {}).get("flags", []), "risk_tier": flags.get(a["id"], {}).get("risk_tier"),
+        fl = [f for f in flags.get(a["id"], {}).get("flags", []) if not (f == "unregistered" and a["registered"])]
+        items.append({**a, "flags": fl, "risk_tier": flags.get(a["id"], {}).get("risk_tier"),
                       "suspended": bool(n and n["props_json"].get("suspended")), "approvals": idx.get(a["id"], [])})
     spend: dict[str, float] = {}
     for a in items:

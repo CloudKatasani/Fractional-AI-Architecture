@@ -113,7 +113,7 @@ export function AppDrawer({ appId, onClose }: { appId: string | null; onClose: (
                     <tbody>
                       {data.contracts.map((c: any) => (
                         <tr key={c.id}>
-                          <td><EvidenceChip id={c.id} /></td>
+                          <td className="whitespace-nowrap"><EvidenceChip id={c.id} /></td>
                           <td>{c.vendor}</td>
                           <td className="text-right">{usd(c.annual_value_usd)}</td>
                           <td className="text-right">{c.licensed_seats ?? "—"}{c.licensed_seats && a.user_count_90d !== undefined ? <span className="ml-1 text-[11px] muted">({pct(a.user_count_90d / c.licensed_seats)} used)</span> : null}</td>
@@ -140,7 +140,7 @@ export function AppDrawer({ appId, onClose }: { appId: string | null; onClose: (
                     <tbody>
                       {data.integrations.map((i: any) => (
                         <tr key={i.id}>
-                          <td><EvidenceChip id={i.id} /></td>
+                          <td className="whitespace-nowrap"><EvidenceChip id={i.id} /></td>
                           <td className="text-xs">{i.from_name} → {i.to_name}</td>
                           <td className="text-xs">{i.pattern} · {i.frequency}</td>
                           <td className="text-xs">{i.data_classification}</td>
@@ -159,7 +159,7 @@ export function AppDrawer({ appId, onClose }: { appId: string | null; onClose: (
                     <tbody>
                       {data.repos.map((r: any) => (
                         <tr key={r.id}>
-                          <td><EvidenceChip id={r.id} /></td>
+                          <td className="whitespace-nowrap"><EvidenceChip id={r.id} /></td>
                           <td className="font-mono text-xs">{r.name}</td>
                           <td className="text-xs">{r.language} / {r.framework} {r.framework_version} {r.eol && <Badge color="amber">EOL</Badge>}</td>
                           <td className="text-right">{r.open_critical_vulns}</td>
@@ -178,7 +178,7 @@ export function AppDrawer({ appId, onClose }: { appId: string | null; onClose: (
                     <tbody>
                       {[...data.incidents].sort((x: any, y: any) => (y.date || "").localeCompare(x.date || "")).slice(0, 15).map((i: any) => (
                         <tr key={i.id}>
-                          <td><EvidenceChip id={i.id} /></td>
+                          <td className="whitespace-nowrap"><EvidenceChip id={i.id} /></td>
                           <td className="whitespace-nowrap text-xs">{i.date}</td>
                           <td><Badge color={i.severity <= 2 ? "red" : "gray"}>S{i.severity}</Badge></td>
                           <td className="text-xs">{humanize(i.root_cause_category)}</td>

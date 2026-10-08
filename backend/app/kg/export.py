@@ -68,8 +68,13 @@ def c4_context(kg: KG, app_id: str) -> str:
 
 
 def data_flow(kg: KG, dataset_id: str) -> str:
-    up = kg.lineage_upstream(dataset_id, max_depth=4)
-    down = kg.lineage_downstream(dataset_id, max_depth=3)
+    up = kg.lineage_upstream(dataset_id, max_depth=3)
+    down = kg.lineage_downstream(dataset_id, max_depth=2)
+    # keep diagrams readable: cap each list
+    for d in (up, down):
+        for k in ("datasets", "pipelines", "bi_assets", "ai"):
+            if k in d:
+                d[k] = d[k][:12]
     nodes = {dataset_id} | set(up["datasets"]) | set(up["pipelines"]) | set(up["systems"]) | set(down["datasets"]) \
         | set(down["pipelines"]) | set(down["bi_assets"]) | set(down["ai"])
     lines = ["flowchart LR"]

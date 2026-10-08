@@ -19,6 +19,21 @@ function Tip({ active, payload }: any) {
   );
 }
 
+function WrapTick({ x, y, payload }: any) {
+  const words = String(payload.value).split(" ");
+  const lines: string[] = [];
+  words.forEach((w) => {
+    const l = lines[lines.length - 1];
+    if (l && (l + " " + w).length <= 14) lines[lines.length - 1] = l + " " + w;
+    else lines.push(w);
+  });
+  return (
+    <text x={x} y={y + 12} textAnchor="middle" fontSize={11} fill="#4b5563">
+      {lines.map((l, i) => <tspan key={i} x={x} dy={i === 0 ? 0 : 13}>{l}</tspan>)}
+    </text>
+  );
+}
+
 export function SavingsTab() {
   const { data, loading, error } = useApi<any>("/portfolio/savings");
   if (loading && !data) return <Loading />;
@@ -50,7 +65,7 @@ export function SavingsTab() {
           <ResponsiveContainer>
             <BarChart data={rows} margin={{ top: 20, right: 10, left: 10, bottom: 5 }} barCategoryGap="18%">
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef0f3" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#4b5563" }} interval={0} stroke="#d1d5db" />
+              <XAxis dataKey="name" tick={<WrapTick />} interval={0} stroke="#d1d5db" height={44} />
               <YAxis tickFormatter={(v) => usdShort(v)} tick={{ fontSize: 11, fill: "#6b7280" }} stroke="#d1d5db" width={60} />
               <Tooltip content={<Tip />} cursor={{ fill: "#f3f4f6" }} />
               <Bar dataKey="base" stackId="w" fill="transparent" isAnimationActive={false} />

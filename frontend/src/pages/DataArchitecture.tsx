@@ -6,7 +6,7 @@ import { PageHeader } from "../components/Layout";
 import { Mermaid } from "../components/Mermaid";
 import { Badge, Card, Empty, ErrorBox, Loading, SeverityBadge, Stat, Tabs, Toggle, useTab } from "../components/ui";
 import { EvidencePackButton } from "../components/ai/EvidencePackButton";
-import { IdChip } from "../components/ai/shared";
+import { IdChip, mermaidMinWidth } from "../components/ai/shared";
 import { ROLE_LABELS, useApi, useApp } from "../state/AppState";
 
 interface Dataset {
@@ -85,11 +85,11 @@ function LineageGroups({ side, names }: { side: Record<string, any>; names: Reco
       {groups.filter(([, v]) => (v as string[]).length > 0).map(([k, ids]) => (
         <div key={k}>
           <div className="label mb-1">{GROUP_LABELS[k] || k} ({(ids as string[]).length})</div>
-          <ul className="max-h-52 space-y-0.5 overflow-auto text-sm">
+          <ul className="grid max-h-60 gap-x-4 gap-y-0.5 overflow-auto text-sm md:grid-cols-2">
             {(ids as string[]).map((id) => (
-              <li key={id} className="flex items-center gap-1">
+              <li key={id} className="flex min-w-0 items-center gap-1">
                 <IdChip id={id} />
-                <span className="truncate">{names[id]?.name || ""}</span>
+                <span className="truncate" title={names[id]?.name}>{names[id]?.name || ""}</span>
               </li>
             ))}
           </ul>
@@ -137,17 +137,23 @@ function LineageTab({ datasets }: { datasets: Dataset[] }) {
       <ErrorBox error={error} />
       {loading && !lin && <Loading />}
       {lin && (
-        <div className="grid gap-4 xl:grid-cols-4">
-          <Card title="Upstream" subtitle="where the data comes from" className="xl:col-span-1">
-            <LineageGroups side={lin.upstream} names={names} />
+        <>
+          <Card title="Lineage graph" subtitle="from the knowledge graph — systems → pipelines → datasets → BI / AI consumers" className="min-w-0">
+            <div className="max-h-[36rem] overflow-auto">
+              <div style={{ minWidth: mermaidMinWidth(lin.mermaid) }}>
+                <Mermaid chart={lin.mermaid} />
+              </div>
+            </div>
           </Card>
-          <Card title="Lineage graph" subtitle="from the knowledge graph (pipelines, BI, AI)" className="xl:col-span-2 min-w-0">
-            <Mermaid chart={lin.mermaid} />
-          </Card>
-          <Card title="Downstream" subtitle="who consumes it" className="xl:col-span-1">
-            <LineageGroups side={lin.downstream} names={names} />
-          </Card>
-        </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Upstream" subtitle="where the data comes from">
+              <LineageGroups side={lin.upstream} names={names} />
+            </Card>
+            <Card title="Downstream" subtitle="who consumes it">
+              <LineageGroups side={lin.downstream} names={names} />
+            </Card>
+          </div>
+        </>
       )}
       <AgentPanel
         key={dsId}
@@ -240,14 +246,14 @@ function PoliciesTab() {
                     <div className="text-[11px] muted">{f.regulation}</div>
                   </td>
                   <td className="min-w-[12rem]">
-                    <div className="flex items-start gap-1"><IdChip id={f.subject_id} /><span className="break-all">{f.subject_name}</span></div>
+                    <div className="flex items-start gap-1"><IdChip id={f.subject_id} /><span className="break-words">{f.subject_name}</span></div>
                     <div className="text-[11px] muted">{f.subject_type}{f.check ? ` · ${f.check}` : ""}</div>
                   </td>
                   <td className="min-w-[14rem] text-xs text-gray-700">{f.fix}</td>
-                  <td className="min-w-[8rem]"><EvidenceList refs={f.source_refs} max={4} /></td>
-                  <td className="min-w-[10rem]">
+                  <td className="min-w-[9rem] max-w-[12rem]"><EvidenceList refs={f.source_refs} max={4} /></td>
+                  <td className="min-w-[12rem] whitespace-nowrap">
                     {f.approval?.action_type && <div className="mb-0.5 font-mono text-[11px] text-gray-600">{f.approval.action_type.replace(/_/g, " ")}</div>}
-                    <ApprovalControls approval={f.approval as ApprovalRef} />
+                    <ApprovalControls approval={f.approval as ApprovalRef} compact />
                   </td>
                 </tr>
               ))}
@@ -276,7 +282,7 @@ function ProductsTab() {
         {items.map((p) => {
           const owner = users.find((u) => u.id === p.owner_user_id);
           const key = p.target_id || p.domain;
-          const open = showYaml[key] ?? false;
+          const open = showYaml[key] ?? true;
           return (
             <div key={key} className="card p-3" data-testid={`product-${key}`}>
               <div className="flex flex-wrap items-start justify-between gap-2">
@@ -288,7 +294,7 @@ function ProductsTab() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <ApprovalControls approval={p.approval} />
+                  <ApprovalControls approval={p.approval} compact />
                   <span className="text-[11px] muted">approve data contract · {ROLE_LABELS[p.approval?.approver_role] || "Data Governance Lead"}</span>
                 </div>
               </div>
@@ -311,7 +317,7 @@ function ProductsTab() {
                 <button className="text-xs text-accent-700 hover:underline" onClick={() => setShowYaml((s) => ({ ...s, [key]: !open }))}>
                   {open ? "Hide" : "Show"} data contract (YAML)
                 </button>
-                {open && <pre className="mt-1 max-h-80 overflow-auto rounded border border-gray-200 bg-gray-50 p-2 text-[11px] leading-snug">{p.contract_yaml}</pre>}
+                {open && <pre className="mt-1 max-h-56 overflow-auto rounded border border-gray-200 bg-gray-50 p-2 text-[11px] leading-snug">{p.contract_yaml}</pre>}
               </div>
             </div>
           );

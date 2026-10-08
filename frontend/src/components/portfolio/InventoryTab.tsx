@@ -99,7 +99,7 @@ export function InventoryTab() {
                     <tr key={a.id} className="cursor-pointer" onClick={() => setOpen(a.id)} data-testid={`app-row-${a.id}`}>
                       <td className="min-w-[14rem]">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[11px] muted">{a.id}</span>
+                          <span className="whitespace-nowrap font-mono text-[11px] muted">{a.id}</span>
                           <span className="font-medium text-gray-900">{a.name}</span>
                           {a.shadow_it && <Badge color="purple">shadow IT</Badge>}
                           {!a.in_cmdb && <Badge color="amber" title="Not in CMDB">no CI</Badge>}

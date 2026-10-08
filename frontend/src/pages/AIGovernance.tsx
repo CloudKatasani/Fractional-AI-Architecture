@@ -292,7 +292,7 @@ function RiskTab({ data, onOpen }: { data: UseCaseList; onOpen: (id: string, cla
                 return (
                   <tr key={u.id} className={bl ? "bg-red-50" : ""}>
                     <td className="min-w-[13rem]">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-start gap-1">
                         <IdChip id={u.id} />
                         <button className="text-left font-medium text-gray-900 hover:text-accent-700" onClick={() => onOpen(u.id, false)}>{u.title}</button>
                       </div>
@@ -386,7 +386,7 @@ function AssetsTab() {
                   {shown.map((a) => (
                     <tr key={a.id} className={!a.registered ? "bg-amber-50/40" : ""}>
                       <td className="min-w-[12rem]">
-                        <div className="flex items-center gap-1"><IdChip id={a.id} /><span className="font-medium text-gray-900">{a.name}</span></div>
+                        <div className="flex items-start gap-1"><IdChip id={a.id} /><span className="font-medium text-gray-900">{a.name}</span></div>
                         <div className="text-[11px] muted">
                           {a.type} · {a.lifecycle} · {a.registered ? "registered" : <span className="text-red-700 font-medium">not registered</span>}
                           {a.suspended && <> · <span className="text-red-700 font-semibold">suspended</span></>}

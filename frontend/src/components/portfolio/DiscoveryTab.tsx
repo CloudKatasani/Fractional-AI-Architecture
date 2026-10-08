@@ -87,13 +87,13 @@ export function DiscoveryTab() {
                         </div>
                         <div className="font-mono text-[11px] muted">{c.app_id}</div>
                       </td>
-                      <td className="max-w-[16rem]">
+                      <td className="max-w-[13rem]">
                         <div className="font-mono text-[11px] text-gray-600">{(c.raw_names || []).slice(0, 4).join(" · ")}{c.raw_names?.length > 4 ? ` +${c.raw_names.length - 4}` : ""}</div>
                       </td>
-                      <td><div className="flex flex-wrap gap-1">{(c.sources || []).map((s: string) => <Badge key={s}>{SOURCE_LABEL[s] || s}</Badge>)}</div></td>
+                      <td><div className="flex gap-1">{(c.sources || []).map((s: string) => <Badge key={s}>{SOURCE_LABEL[s] || s}</Badge>)}</div></td>
                       <td className="text-right tabular-nums">{usd(c.annual_cost_usd)}</td>
                       <td><ConfidenceBadge value={c.confidence} /></td>
-                      <td className="max-w-[14rem]"><EvidenceList refs={c.source_refs} max={4} /><div className="text-[11px] muted">{c.evidence}</div></td>
+                      <td className="min-w-[19rem]"><EvidenceList refs={c.source_refs} max={4} /><div className="text-[11px] leading-snug muted">{c.evidence}</div></td>
                       <td className="whitespace-nowrap">{c.approval ? <ApprovalControls approval={c.approval} /> : <Badge>observed</Badge>}</td>
                     </tr>
                   ))}
@@ -112,16 +112,16 @@ export function DiscoveryTab() {
             </button>
           }
         >
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-3 2xl:grid-cols-2">
             <div className="overflow-x-auto rounded border border-gray-200">
               <table className="tbl">
                 <thead><tr><th>Duplicate CI</th><th>Keep</th><th>Application</th><th>Conf.</th><th>Status</th></tr></thead>
                 <tbody>
                   {dups.map((d) => (
                     <tr key={d.ci_id}>
-                      <td><EvidenceChip id={d.ci_id} /><div className="text-[11px] muted">{d.raw_names?.join(" / ")}</div></td>
-                      <td>{d.keep_ci_id && <EvidenceChip id={d.keep_ci_id} />}</td>
-                      <td>{d.app_id && <EvidenceChip id={d.app_id} />}</td>
+                      <td className="whitespace-nowrap"><EvidenceChip id={d.ci_id} /><div className="text-[11px] muted">{d.raw_names?.join(" / ")}</div></td>
+                      <td className="whitespace-nowrap">{d.keep_ci_id && <EvidenceChip id={d.keep_ci_id} />}</td>
+                      <td className="whitespace-nowrap">{d.app_id && <EvidenceChip id={d.app_id} />}</td>
                       <td><ConfidenceBadge value={d.confidence} /></td>
                       <td className="whitespace-nowrap">{d.approval ? <ApprovalControls approval={d.approval} compact /> : <Badge>observed</Badge>}</td>
                     </tr>
@@ -136,7 +136,7 @@ export function DiscoveryTab() {
                 <tbody>
                   {stale.map((d) => (
                     <tr key={d.ci_id}>
-                      <td><EvidenceChip id={d.ci_id} /><div className="text-[11px] muted">{d.raw_names?.join(" / ")}</div></td>
+                      <td className="whitespace-nowrap"><EvidenceChip id={d.ci_id} /><div className="text-[11px] muted">{d.raw_names?.join(" / ")}</div></td>
                       <td className="text-xs text-gray-700">{d.evidence}</td>
                       <td><ConfidenceBadge value={d.confidence} /></td>
                       <td className="whitespace-nowrap">{d.approval ? <ApprovalControls approval={d.approval} compact /> : <Badge>observed</Badge>}</td>

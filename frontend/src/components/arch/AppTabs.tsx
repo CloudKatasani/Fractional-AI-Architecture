@@ -261,7 +261,7 @@ export function Apis() {
                   <td className="text-xs max-w-md"><TextWithChips text={f.recommendation || ""} /></td>
                   <td><IdChips ids={f.consumers_to_migrate} /></td>
                   <td>{f.severity ? <SeverityBadge severity={f.severity} /> : <span className="text-xs muted">—</span>}</td>
-                  <td><EvidenceList refs={f.source_refs} max={3} /></td>
+                  <td className="min-w-[10rem]"><EvidenceList refs={f.source_refs} max={3} /></td>
                   <td className="whitespace-nowrap">{f.canonical_api_id && <EvidenceChip id={f.canonical_api_id} />}{f.approval ? <ApprovalControls approval={f.approval} compact /> : <span className="text-[11px] muted">observation</span>}</td>
                 </tr>
               ))}
@@ -331,7 +331,7 @@ export function Debt() {
       <AgentPanel agentId="app.tech_debt_radar" run={data.run}>
         <div className="grid gap-4 xl:grid-cols-5">
           <div className="xl:col-span-3">
-            <div className="label mb-1">Top 20 by debt score (0–100) — red = end-of-life framework</div>
+            <div className="label mb-1">Top 20 by debt score (0–100) — click a bar to open the application</div>
             <div style={{ height: top.length * 24 + 40 }}>
               <ResponsiveContainer>
                 <BarChart data={top} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
@@ -340,7 +340,7 @@ export function Debt() {
                   <YAxis type="category" dataKey="label" width={200} tick={{ fontSize: 11 }} interval={0} />
                   <Tooltip formatter={(v: any) => [v, "score"]} labelFormatter={(l: any) => l} />
                   <Bar dataKey="score" onClick={(d: any) => openEvidence(d.app_id)} cursor="pointer" radius={[0, 3, 3, 0]}>
-                    {top.map((x) => <Cell key={x.app_id} fill={x.eol ? "#d1242f" : "#1f5bd6"} />)}
+                    {top.map((x) => <Cell key={x.app_id} fill={x.score >= 75 ? "#1a49ad" : "#2f6fec"} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -377,10 +377,10 @@ export function Debt() {
                       <span className="font-mono text-xs">{x.score.toFixed(1)}</span>
                     </div>
                   </td>
-                  <td className="text-xs">{(x.drivers || []).join(" · ") || <span className="muted">—</span>}</td>
+                  <td className="text-xs min-w-[18rem]">{(x.drivers || []).join(" · ") || <span className="muted">—</span>}</td>
                   <td><Badge color={x.effort_band === "L" ? "red" : x.effort_band === "M" ? "amber" : "gray"}>{x.effort_band}</Badge></td>
                   <td className="text-xs whitespace-nowrap">{usd(x.incident_cost_est)}</td>
-                  <td><EvidenceList refs={x.source_refs} max={4} /></td>
+                  <td className="min-w-[14rem]"><EvidenceList refs={x.source_refs} max={4} /></td>
                   <td className="whitespace-nowrap">{x.approval ? <ApprovalControls approval={x.approval} compact /> : <span className="text-[11px] muted">—</span>}</td>
                 </tr>
               ))}

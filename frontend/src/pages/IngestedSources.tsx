@@ -106,18 +106,21 @@ export default function IngestedSources() {
         {sources.map((s) => {
           const plantedTotal = s.planted ? Object.values(s.planted as Record<string, number>).reduce((a: number, b: number) => a + b, 0) : 0;
           return (
-            <button
+            <div
               key={s.source}
+              role="button"
+              tabIndex={0}
               onClick={() => setSel(s.source)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(s.source)}
               data-testid={`source-${s.source}`}
-              className={`card px-3 py-2.5 text-left hover:border-accent-500 ${active === s.source ? "border-accent-600 ring-1 ring-accent-100" : ""}`}
+              className={`card cursor-pointer px-3 py-2.5 text-left hover:border-accent-500 ${active === s.source ? "border-accent-600 ring-1 ring-accent-100" : ""}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="text-sm font-semibold text-gray-900">{s.label}</div>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">{s.rows.toLocaleString()}</span>
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-[11px] muted">
-                <span className="font-mono">{s.table}</span><span>· rows</span>
+                <span>table</span><span className="font-mono">{s.table}</span>
               </div>
               <div className="mt-1 text-xs text-gray-600">{s.description}</div>
               {planted && s.planted && (
@@ -128,7 +131,7 @@ export default function IngestedSources() {
                   ))}
                 </div>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

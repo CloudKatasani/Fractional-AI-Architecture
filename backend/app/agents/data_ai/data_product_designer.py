@@ -46,7 +46,9 @@ class DataProductDesigner(Agent):
         eligible.sort(key=lambda kv: (-len(consumers.get(kv[0], set())), kv[0]))
         for dom, items in eligible[:6]:
             teams = sorted(consumers.get(dom, set()))
-            curated = [d for d in items if d["layer"] in ("curated", "mart")] or items
+            curated = [d for d in items if d["layer"] in ("curated", "mart")]
+            if len(curated) < 3:
+                curated = items
             owner = max((d["owner_user_id"] for d in items if d["owner_user_id"]), key=lambda u: sum(1 for d in items if d["owner_user_id"] == u), default=None)
             pii = any(d["pii"] for d in curated)
             sla = "hourly" if dom in ("Metering", "Usage", "Network", "Grid Operations") else "daily by 06:00"
