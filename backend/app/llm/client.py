@@ -33,10 +33,6 @@ PRICING = {
 }
 
 
-def _usd(fmt) -> Any:  # noqa: ANN001
-    return f"${fmt:,.0f}"
-
-
 def _env() -> Environment:
     env = Environment(loader=FileSystemLoader(str(TEMPLATES)), autoescape=select_autoescape([]), undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True)
@@ -77,7 +73,7 @@ class MockLLM:
 
     def narrate(self, agent, ctx, result, findings: list[dict]) -> Narrative:  # noqa: ANN001
         key = agent.narrative_key(ctx)
-        override = MOCK_RESPONSES / agent.id / f"{key}.json"
+        override = MOCK_RESPONSES / agent.id / f"{ctx.tenant_id}_{key}.json"
         if override.exists():
             data = json.loads(override.read_text())
             return Narrative(summary=data["summary"], notes=data.get("notes", []), mode="mock")

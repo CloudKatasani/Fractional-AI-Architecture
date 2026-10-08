@@ -62,7 +62,7 @@ def gen_datasets(ctx: GenContext) -> None:
         raw = add_ds(f"{spec['n']} (raw)", domain, spec, lake, "raw", src["pii"], src["classification"], "it")
         ctx.lineage_edges.append(([src["id"]], raw["id"], "raw"))
         if ctx.rng.random() < 0.55 or spec.get("consumers"):
-            deid = src["pii"] and ctx.rng.random() < 0.55
+            deid = src["pii"] and ctx.rng.random() < 0.8
             cur = add_ds(f"{spec['n']} (curated)", domain, spec, lake, "curated", src["pii"] and not deid,
                          "internal" if deid else src["classification"], "it")
             ctx.lineage_edges.append(([raw["id"]], cur["id"], "curated"))

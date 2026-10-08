@@ -23,7 +23,7 @@ def _entity(name: str, *cols: Column) -> Table:
     )
 
 
-S, I, F, B, J, T = String, Integer, Float, Boolean, JSON, Text
+S, I, F, B, J, T = String, Integer, Float, Boolean, JSON, Text  # noqa: E741
 
 
 def c(name: str, typ, **kw) -> Column:  # noqa: ANN001

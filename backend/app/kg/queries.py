@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 from collections import deque
-from datetime import datetime
+from datetime import UTC, datetime
 
 import networkx as nx
 from sqlalchemy import delete, insert, select, update
@@ -291,7 +291,7 @@ def get_kg(tenant_id: str) -> KG:
 # ---- writes (used by agents for drafts and by the graph curator for approved changes) --------
 
 def _now() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds")
+    return datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 def upsert_node(repo: Repo, id_: str, type_: str, name: str, props: dict, refs: list[str], created_by: str,

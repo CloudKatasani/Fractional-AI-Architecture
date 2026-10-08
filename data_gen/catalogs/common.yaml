@@ -39,7 +39,7 @@ standards:
     severity: high
     rule_text: Applications must not read from or write to another application's database (DB links, shared schemas, direct SQL). Use published APIs or events.
     checks:
-      - {type: pattern_any, patterns: ["direct (database|db) (access|connection|link|query|read)", "\\bdb[ _-]?link", "query (the )?.{0,40}(tables|schema) directly", "read[- ]only (account|user) on the .{0,40}database"]}
+      - {type: pattern_any, patterns: ["direct (database|db) (access|connection|link|query|read)", "\\bdb[ _-]?link", "query (the )?.{0,40}(tables|schema) directly", "read[- ]only (account|user) on the .{0,40}database", "writes? .{0,40}into the shared database"]}
   - id: STD-INT-03
     title: Integrations must be registered and approved
     domain: integration

@@ -15,7 +15,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from functools import cached_property
 from typing import Any, ClassVar
 
@@ -206,7 +206,7 @@ class Agent:
         from app.services import audit, settings_service
 
         ctx.llm = ctx.llm or get_llm()
-        started = datetime.utcnow().isoformat(timespec="seconds")
+        started = datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds")
         t0 = time.time()
         autonomy = settings_service.autonomy_for(ctx.tenant_id, self.id)
         audit.log(ctx.tenant_id, "agent", self.id, "agent_run_started", "agent_run", ctx.run_id,
@@ -267,7 +267,7 @@ def _persist_run(ctx: AgentContext, agent: Agent, started: str, output: AgentOut
     ctx.repo.insert("agent_runs", {
         "id": ctx.run_id, "tenant_id": ctx.tenant_id, "agent_id": agent.id, "trigger": ctx.trigger,
         "input_json": ctx.params, "output_json": output.model_dump() if output else error, "status": status,
-        "started_at": started, "finished_at": datetime.utcnow().isoformat(timespec="seconds"),
+        "started_at": started, "finished_at": datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds"),
         "cost_json": output.cost.model_dump() if output and output.cost else None, "autonomy_level": autonomy,
         "user_id": ctx.user_id,
     })

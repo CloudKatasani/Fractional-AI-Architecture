@@ -55,7 +55,7 @@ class GovernancePolicyChecker(Agent):
             t = chk["type"]
             tag = chk.get("tag")
 
-            def tagged(d: dict) -> bool:
+            def tagged(d: dict, tag: str | None = tag) -> bool:
                 return tag is None or tag in (d["tags"] or [])
 
             if t == "pii_requires_retention":

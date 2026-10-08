@@ -49,7 +49,7 @@ class IntegrationAPIArchitect(Agent):
             others = [a for a in items if a["id"] != canon["id"]]
             migrate = sorted({c for o in others for c in o["consumers"]})
             rec = (f"Designate {canon['name']} [{canon['id']}] as canonical for '{canon['resource']}'; migrate "
-                   + ", ".join(apps[c]["name"] for c in migrate[:5]) + f" and deprecate " + ", ".join(o["name"] for o in others) + ".")
+                   + ", ".join(apps[c]["name"] for c in migrate[:5]) + " and deprecate " + ", ".join(o["name"] for o in others) + ".")
             refs = [ev(a["id"], "apis", f"{a['name']} (owner {apps[a['owner_app_id']]['name']}, {a['style']}, auth {a['auth']}, "
                                         f"{len(a['consumers'])} consumers)") for a in items]
             findings.append(APIFinding(type="duplicate", api_ids=[a["id"] for a in items], recommendation=rec, source_refs=refs,

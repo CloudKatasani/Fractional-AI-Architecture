@@ -74,10 +74,9 @@ def build_rows(tenant_id: str, seed: int, today: date) -> GenContext:
 
 
 def write_db(ctx: GenContext, out: Path) -> None:
-    from sqlalchemy import insert
-
     from app.db import models
     from app.db.session import create_schema, dispose_engine, get_engine
+    from sqlalchemy import insert
 
     out.parent.mkdir(parents=True, exist_ok=True)
     dispose_engine(ctx.tenant_id)

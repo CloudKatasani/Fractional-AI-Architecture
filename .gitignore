@@ -16,3 +16,4 @@ data/meridian/
 frontend/node_modules/
 frontend/dist/
 *.log
+data/*.db-*

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, insert
 
@@ -34,7 +34,7 @@ class GraphBuilder:
         self.tenant_id = repo.tenant_id
         self.nodes: dict[str, dict] = {}
         self.edges: list[dict] = []
-        self.now = datetime.utcnow().isoformat(timespec="seconds")
+        self.now = datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds")
         self._edge_keys: set[tuple[str, str, str]] = set()
 
     def node(self, id_: str, type_: str, name: str, props: dict | None = None, refs: list[str] | None = None,

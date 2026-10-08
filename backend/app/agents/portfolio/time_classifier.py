@@ -9,7 +9,6 @@ from app.agents.common import debt_scores
 from app.config import settings
 from app.kg.queries import update_node_props
 
-
 OLD_TECH = ("Java 6", "Java 7", "Java 8", ".NET Framework 3.5", ".NET Framework 4.5", "AngularJS", "Python 2", "COBOL", "VBA",
             "Access", "Oracle 10g", "Oracle 11g", "SQL Server 2008", "SQL Server 2012", "Perl", "SAS 9.2", "JSP")
 

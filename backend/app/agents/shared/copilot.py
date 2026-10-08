@@ -232,7 +232,7 @@ class MockCopilot:
         approved = "Yes" if f.fit_score >= 0.5 else "Partially"
         return {"answer": f"{approved} — **{f.name}** [{f.pattern_id}] fits ({f.why}) Applicable standards: "
                           + ", ".join(f"[{s}]" for s in f.standard_ids) + "."
-                          + (f" Reuse: " + ", ".join(f"[{a}]" for a in f.reuse_api_ids) if f.reuse_api_ids else ""),
+                          + (" Reuse: " + ", ".join(f"[{a}]" for a in f.reuse_api_ids) if f.reuse_api_ids else ""),
                 "citations": _cite(self.kg, [f.pattern_id] + f.standard_ids + f.reuse_api_ids), "mermaid": f.starter_diagram_mermaid}
 
     def renewals(self, days: str) -> dict:

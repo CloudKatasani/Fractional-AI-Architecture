@@ -6,7 +6,7 @@ Runs after every approval decision. Conflicts (two sources disagree) keep the hi
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from app.agents.base import Agent
 from app.db.session import Repo
@@ -40,7 +40,7 @@ class GraphCurator(Agent):
 
 
 def _now() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds")
+    return datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 def _ticket(repo: Repo, appr: dict, prefix: str, title: str, assignee: str | None) -> dict:

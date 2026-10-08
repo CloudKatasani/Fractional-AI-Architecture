@@ -195,7 +195,7 @@ def gen_contracts(ctx: GenContext) -> None:
                 "market_benchmark_usd": round(value * 0.18, -2),
             }, "contract_management")
     # A handful of long-tail SaaS with poor (but not trap-level) utilisation
-    candidates = [c for c in ctx.rows["contracts"] if c["licensed_seats"] and c["app_ids"] and not c["auto_renew"] is None]
+    candidates = [c for c in ctx.rows["contracts"] if c["licensed_seats"] and c["app_ids"] and c["auto_renew"] is not None]
     for c in ctx.pick([c for c in candidates if ctx.apps_by_id(c["app_ids"][0])["_spec"]["filler"]], 6):
         app = ctx.apps_by_id(c["app_ids"][0])
         if app["user_count_90d"]:

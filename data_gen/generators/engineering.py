@@ -129,7 +129,7 @@ def gen_repos(ctx: GenContext) -> None:
     for a in ctx.rows["applications"]:
         spec = a["_spec"]
         fw = spec.get("fw")
-        if not spec["inhouse"] and not (fw or (a["hosting"] == "on_prem" and ctx.rng.random() < 0.15)):
+        if not spec["inhouse"] and not (fw or (a["hosting"] == "on_prem" and ctx.rng.random() < 0.06)):
             continue
         if not fw:
             fw = ctx.pick(["Java 11 / Spring 5", ".NET Framework 4.8 / MVC", "Python 3.11 / FastAPI"])
@@ -236,12 +236,14 @@ def gen_design_docs(ctx: GenContext) -> None:
     for t in hist_titles:
         sub_days = ctx.rng.randint(30, 120)
         hours = ctx.rng.randint(20, 96)
+        from datetime import datetime, timedelta
+
         submitted = ctx.days_ago(sub_days) + "T09:00:00"
-        reviewed_day = ctx.days_ago(sub_days - hours // 24)
+        reviewed = (datetime.fromisoformat(submitted) + timedelta(hours=hours)).isoformat(timespec="seconds")
         ctx.add("design_docs", {
             "id": ctx.next_id("DES", 3), "title": t, "team": ctx.pick(teams),
             "body_md": f"## Summary\n{t}.\n\n## Design\nData classification: internal. All APIs published through the API gateway with OAuth2.",
-            "submitted_at": submitted, "status": "approved", "reviewed_at": f"{reviewed_day}T{9 + hours % 24:02d}:00:00",
+            "submitted_at": submitted, "status": "approved", "reviewed_at": reviewed,
             "app_ids": [], "components": [],
         }, "design_intake")
 

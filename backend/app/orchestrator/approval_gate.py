@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from app.db.session import Repo
 from app.services import audit
@@ -27,7 +27,7 @@ class ApprovalError(Exception):
 
 
 def _now() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds")
+    return datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 def can_decide(user_role: str, approver_role: str) -> bool:
